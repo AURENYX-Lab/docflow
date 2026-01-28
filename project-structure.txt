@@ -1,0 +1,62 @@
+.
+├── main.py
+├── project-structure.txt
+├── pyproject.toml
+├── .python-version
+├── README.md
+├── src
+│   └── docflow
+│       ├── apply
+│       │   ├── filesystem.py
+│       │   ├── obsidian.py
+│       │   ├── pipeline.py
+│       │   └── verify.py
+│       ├── core
+│       │   ├── audit.py
+│       │   ├── config.py
+│       │   ├── discovery.py
+│       │   ├── extract.py
+│       │   ├── heuristics.py
+│       │   ├── naming.py
+│       │   └── schema.py
+│       ├── __init__.py
+│       ├── __main__.py
+│       ├── ocr
+│       │   ├── pipeline.py
+│       │   ├── preflight.py
+│       │   ├── quality.py
+│       │   └── settings.py
+│       ├── suggest
+│       │   ├── jsonfix.py
+│       │   ├── ollama_client.py
+│       │   ├── pipeline.py
+│       │   ├── postprocess.py
+│       │   ├── prompt.py
+│       │   └── verify.py
+│       └── util
+├── uv.lock
+└── .venv
+    ├── bin
+    │   ├── activate
+    │   ├── activate.bat
+    │   ├── activate.csh
+    │   ├── activate.fish
+    │   ├── activate.nu
+    │   ├── activate.ps1
+    │   ├── activate_this.py
+    │   ├── deactivate.bat
+    │   ├── normalizer
+    │   ├── pydoc.bat
+    │   ├── python -> /usr/bin/python3.14
+    │   ├── python3 -> python
+    │   └── python3.14 -> python
+    ├── CACHEDIR.TAG
+    ├── .gitignore
+    ├── lib
+    │   └── python3.14
+    │       └── site-packages
+    ├── lib64 -> lib
+    ├── .lock
+    └── pyvenv.cfg
+
+14 directories, 46 files

@@ -1,0 +1,15 @@
+[project]
+name = "docflow"
+version = "0.1.0"
+description = "Local PDF intake classification + audit + apply"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "requests>=2.32.0",
+  "pikepdf>=9.0.0",
+]
+
+[project.scripts]
+docflow = "docflow.__main__:main"
+
+
