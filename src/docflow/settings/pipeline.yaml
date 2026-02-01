@@ -1,0 +1,14 @@
+pipeline:
+  ocr:
+    enabled: true
+    skip_if_text_quality_ok: true
+
+  suggest:
+    use_llm: true
+    llm_fallback_only: false
+    ollama_timeout_s: 1800
+
+  apply:
+    require_human_verify: true
+    copy_instead_of_move: true
+    write_obsidian_note: true

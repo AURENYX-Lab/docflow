@@ -1,0 +1,19 @@
+date_detection:
+  min_year: 1990
+  max_year: 2100
+
+aktenzeichen:
+  min_length: 4
+  ignore_numeric_only: true
+
+frist:
+  one_month_triggers:
+    - rechtsbehelfsbelehr
+    - innerhalb eines monats
+    - widerspruch.*monat
+    - klage.*monat
+
+extraction:
+  max_chars: 9000
+  front_pages: 3
+  dist_pages: 1

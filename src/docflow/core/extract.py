@@ -1,83 +1,94 @@
 from __future__ import annotations
-from pathlib import Path
+
 import math
 import subprocess
-import pikepdf
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List, Sequence
+
+import pikepdf  # type: ignore
 
 
-def pdf_page_count(pdf: Path) -> int:
-    with pikepdf.open(str(pdf)) as f:
-        return len(f.pages)
+class ExtractError(RuntimeError):
+    pass
 
 
-def sample_pages(total: int, front: int, dist: int, start_pct: int, end_pct: int) -> list[int]:
+@dataclass(frozen=True)
+class ExtractPlan:
+    max_chars: int
+    front_pages: int
+    dist_pages: int
+
+
+def num_pages(pdf_path: Path) -> int:
+    with pikepdf.open(str(pdf_path)) as pdf:
+        return len(pdf.pages)
+
+
+def _evenly_spaced_indices(total: int, n: int) -> List[int]:
     if total <= 0:
         return []
-    pages = []
-
-    # front pages
-    for i in range(1, min(front, total) + 1):
-        pages.append(i)
-
-    # distributed range
-    if dist > 0 and total > 1:
-        a = max(0, min(100, start_pct)) / 100.0
-        b = max(0, min(100, end_pct)) / 100.0
-        if b < a:
-            a, b = b, a
-
-        start = max(0, int(math.floor((total - 1) * a)))
-        end = min(total - 1, int(math.floor((total - 1) * b)))
-        if end < start:
-            start, end = 0, total - 1
-
-        span = end - start
-        if span == 0:
-            idxs = [start]
-        else:
-            if dist == 1:
-                idxs = [start + span // 2]
-            else:
-                idxs = [round(start + i * span / (dist - 1)) for i in range(dist)]
-
-        for ix in sorted(set(int(x) for x in idxs)):
-            p = ix + 1
-            if 1 <= p <= total:
-                pages.append(p)
-
-    # last page
-    pages.append(total)
-
-    # unique in order
-    seen = set()
-    out = []
-    for p in pages:
-        if p not in seen:
-            seen.add(p)
-            out.append(p)
-    return out
+    if n <= 1:
+        return [0]
+    if total == 1:
+        return [0]
+    idx = []
+    for i in range(n):
+        pos = round(i * (total - 1) / (n - 1))
+        idx.append(int(pos))
+    return sorted(set(idx))
 
 
-def pdftotext_pages(pdf: Path, pages: list[int]) -> bytes:
-    out = bytearray()
-    for p in pages:
-        cp = subprocess.run(
-            ["pdftotext", "-f", str(p), "-l", str(p), "-layout", str(pdf), "-"],
-            stdout=subprocess.PIPE,
+def _pdftotext_one_page(pdf_path: Path, page_1based: int, *, timeout_s: int = 30) -> str:
+    try:
+        out = subprocess.check_output(
+            ["pdftotext", "-f", str(page_1based), "-l", str(page_1based), str(pdf_path), "-"],
             stderr=subprocess.DEVNULL,
-            check=False,
+            timeout=timeout_s,
         )
-        chunk = cp.stdout.replace(b"\x00", b"")
-        out.extend(chunk)
-        out.extend(b"\n")
-    return bytes(out)
+        return out.decode("utf-8", errors="ignore").replace("\x00", "")
+    except Exception:
+        return ""
 
 
-def extract_text_budget(
-    pdf: Path, max_bytes: int, front_pages: int, dist_pages: int, start_pct: int, end_pct: int
-) -> str:
-    total = pdf_page_count(pdf)
-    pages = sample_pages(total, front_pages, dist_pages, start_pct, end_pct)
-    raw = pdftotext_pages(pdf, pages)
-    raw = raw[:max_bytes]
-    return raw.decode("utf-8", errors="ignore")
+def sample_text(pdf_path: Path, plan: ExtractPlan) -> str:
+    """
+    Deterministic sampling across PDF:
+    - always take first N front pages
+    - take evenly spaced dist pages across whole doc
+    - budget is in characters (roughly), but we enforce by UTF-8 byte truncation to be safe.
+    """
+    total = num_pages(pdf_path)
+    if total <= 0:
+        return ""
+
+    front = list(range(1, min(plan.front_pages, total) + 1))
+    dist_idx = _evenly_spaced_indices(total, min(plan.dist_pages, total))
+    dist = [i + 1 for i in dist_idx]
+
+    # ordered unique
+    pages: List[int] = []
+    seen = set()
+    for p in front + dist:
+        if p not in seen:
+            pages.append(p)
+            seen.add(p)
+
+    chunks: List[str] = []
+    for p in pages:
+        chunks.append(_pdftotext_one_page(pdf_path, p))
+        chunks.append("\n")
+
+    raw = "".join(chunks).strip()
+
+    # enforce max_chars using UTF-8 bytes to avoid breaking multi-byte sequences
+    b = raw.encode("utf-8", errors="ignore")
+    # rough char->byte guard: allow ~4 bytes per char worst-case
+    max_bytes = max(1024, min(len(b), plan.max_chars * 4))
+    b2 = b[:max_bytes]
+    txt = b2.decode("utf-8", errors="ignore")
+
+    # final trim to max_chars
+    if len(txt) > plan.max_chars:
+        txt = txt[: plan.max_chars]
+    return txt.strip()

@@ -1,0 +1,187 @@
+# CLOSED WORLD: areas are authoritative.
+closed_world: true
+
+areas:
+
+  - id: "01_PERSOENLICH"
+    priority: 7
+    keywords:
+      - ausweis
+      - personalausweis
+      - reisepass
+      - pass
+      - geburtsurkunde
+      - familienstand
+    tags: ["persoenlich"]
+
+  - id: "02_GESUNDHEIT"
+    priority: 2
+    keywords:
+      - klinik
+      - arzt
+      - ärztin
+      - therapie
+      - diagnose
+      - entlassungsbericht
+      - au
+      - arbeitsunfähigkeit
+      - befund
+      - reha
+      - psychotherapie
+    tags: ["gesundheit"]
+
+  - id: "03_BILDUNG_BERUF"
+    priority: 4
+    keywords:
+      - bafög
+      - bafoeg
+      - hochschule
+      - universität
+      - iu
+      - immatrikulation
+      - prüfung
+      - pruefung
+      - prüfungsamt
+      - pruefungsamt
+      - leistungsnachweis
+      - praktikum
+      - arbeitsvertrag
+      - zeugnis
+    tags: ["bildung", "beruf"]
+
+  - id: "04_FINANZEN"
+    priority: 5
+    keywords:
+      - kontoauszug
+      - rechnung
+      - mahnung
+      - zahlung
+      - steuer
+      - finanzamt
+      - kredit
+      - darlehen
+      - depot
+      - bank
+      - gebühren
+      - gebuehren
+    tags: ["finanzen"]
+
+  - id: "05_RECHT_BEHOERDEN"
+    priority: 1
+    hard: true
+    keywords:
+      - bescheid
+      - ablehnungsbescheid
+      - ablehnung
+      - widerspruch
+      - klage
+      - gericht
+      - aktenzeichen
+      - verwaltungsakt
+      - jobcenter
+      - buergergeld
+      - bürgergeld
+      - sgb
+      - sgb ii
+      - sgb2
+      - agentur für arbeit
+      - sozialgericht
+      - verwaltungsgericht
+      - anwalt
+      - rechtsanwalt
+      - vollmacht
+      - kanzlei
+      - zustellung
+      - bea
+    tags: ["recht", "behoerde"]
+
+  - id: "06_WOHNEN_MOBILITAET"
+    priority: 6
+    keywords:
+      - miete
+      - wohnung
+      - nebenkosten
+      - mietvertrag
+      - kaution
+      - hausverwaltung
+      - kfz
+      - auto
+      - öpnv
+      - oepnv
+      - bahn
+      - ticket
+      - umzug
+    tags: ["wohnen", "mobilitaet"]
+
+  - id: "07_PROJEKTE"
+    priority: 8
+    keywords:
+      - projekt
+      - konzept
+      - roadmap
+      - spezifikation
+      - specs
+      - todo
+      - aurenyx
+      - operator
+    tags: ["projekte"]
+
+  - id: "08_KORRESPONDENZ"
+    priority: 12
+    keywords:
+      - hallo
+      - mit freundlichen grüßen
+      - freundlichen grüßen
+      - email
+      - e-mail
+      - betreff
+    tags: ["korrespondenz"]
+
+  - id: "09_WISSEN_REFERENZEN"
+    priority: 9
+    keywords:
+      - paper
+      - guide
+      - tutorial
+      - buch
+      - notizen
+      - referenz
+      - literatur
+    tags: ["wissen"]
+
+  - id: "10_VERSICHERUNGEN"
+    priority: 3
+    keywords:
+      - krankenkasse
+      - pflegeversicherung
+      - rentenversicherung
+      - berufsgenossenschaft
+      - police
+      - versicherungsschein
+      - leistungsbescheid
+      - beitrag
+    tags: ["versicherung"]
+
+  - id: "11_NACHWEISE_PROTOKOLLE"
+    priority: 10
+    keywords:
+      - nachweis
+      - bestätigung
+      - bestaetigung
+      - protokoll
+      - quittung
+      - einlieferungsbeleg
+      - teilnahmebescheinigung
+    tags: ["nachweise"]
+
+  - id: "98_SYSTEM_META"
+    priority: 11
+    keywords:
+      - log
+      - logs
+      - systemd
+      - config
+      - skript
+      - tool-ausgabe
+      - metadaten
+    tags: ["system"]

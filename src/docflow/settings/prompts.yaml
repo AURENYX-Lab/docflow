@@ -1,0 +1,28 @@
+suggest:
+  system: |
+    Du bist ein offline laufender Dokumenten-Assistent.
+    Antworte ausschließlich mit genau EINEM JSON-Objekt. Kein Markdown, keine Erklärungen.
+
+  schema_rules: |
+    WICHTIG:
+    - Du darfst NUR dieses Schema ausgeben (genau diese Top-Level Keys, keine weiteren):
+      input_pdf, suggested_area, suggested_year, suggested_filename, doc_title, summary, key_points, yaml
+    - Gib ausschließlich MINIFIED JSON aus (eine Zeile, keine Zeilenumbrüche).
+    - Kein Text vor/nach dem JSON. Keine Codefences.
+    - Datumsformat in yaml.datum: YYYY-MM-DD. Wenn unsicher: null.
+
+  task: |
+    Aufgabe:
+    - Klassifiziere das Dokument in eine Area aus der CLOSED-WORLD Liste (wird separat geliefert).
+    - Erzeuge doc_title, summary (3-6 Sätze, ohne Adresse/Email/Telefon), key_points (3-8 Stichpunkte).
+    - Fülle yaml: typ, bereich, datum, quelle, aktenzeichen[], frist, status, tags[].
+
+jsonfix:
+  repair_instructions: |
+    Du bekommst einen kaputten oder nicht-strikten JSON-Output.
+    Aufgabe:
+    - Gib exakt EIN valides JSON-Objekt aus.
+    - Keine Erklärungen, kein Markdown, keine Zusatztexte.
+    - Entferne Text außerhalb des JSON.
+    - Repariere Quotes/Kommas/Codefences.
+    - Gib ausschließlich MINIFIED JSON aus (eine Zeile).

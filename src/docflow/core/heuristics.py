@@ -1,9 +1,36 @@
 from __future__ import annotations
-import re
-from datetime import date
-import calendar
 
-MONTHS = {
+import re
+from dataclasses import dataclass
+from datetime import date as _date
+import calendar
+from typing import Any, Dict, List, Optional, Tuple
+
+from src.docflow.settings import Settings
+
+
+_UMLAUT_NORM = str.maketrans(
+    {"ä": "ae", "ö": "oe", "ü": "ue", "ß": "ss", "Ä": "ae", "Ö": "oe", "Ü": "ue"}
+)
+
+
+def _norm(s: str) -> str:
+    s = (s or "").translate(_UMLAUT_NORM).lower()
+    s = re.sub(r"\s+", " ", s)
+    return s
+
+
+# ---------------------------
+# Date extraction
+# ---------------------------
+
+RE_ISO = re.compile(r"\b((?:19|20)\d{2})-([01]\d)-([0-3]\d)\b")
+RE_DMY = re.compile(r"\b([0-3]?\d)[\.\-/ ]+([01]?\d)[\.\-/ ]+((?:19|20)?\d{2})\b", re.I)
+RE_MONTHNAME = re.compile(
+    r"\b([0-3]?\d)\.\s*(januar|februar|maerz|märz|april|mai|juni|juli|august|september|oktober|november|dezember)\s+((?:19|20)\d{2})\b",
+    re.I,
+)
+_MONTHS = {
     "januar": 1,
     "februar": 2,
     "maerz": 3,
@@ -28,311 +55,192 @@ def _norm_year(y: str) -> int:
     return 1900 + yy if yy >= 70 else 2000 + yy
 
 
-def extract_date(text: str) -> str | None:
-    t = text.replace("\x00", " ").replace("\r", "\n")
-    head = t[:8000]  # dates are almost always in header-ish parts
+def _valid_date(y: int, m: int, d: int, *, min_y: int, max_y: int) -> Optional[str]:
+    if y < min_y or y > max_y:
+        return None
+    try:
+        return _date(y, m, d).isoformat()
+    except Exception:
+        return None
 
-    # ISO
-    m = re.search(r"\b((?:19|20)\d{2})-([01]\d)-([0-3]\d)\b", head)
+
+def extract_date(text: str, settings: Settings) -> Optional[str]:
+    cfg = settings.heuristics.get("date_detection", {})
+    min_y = int(cfg["min_year"])
+    max_y = int(cfg["max_year"])
+
+    t = (text or "").replace("\x00", " ")
+    m = RE_ISO.search(t)
     if m:
-        return m.group(0)
+        iso = _valid_date(
+            int(m.group(1)), int(m.group(2)), int(m.group(3)), min_y=min_y, max_y=max_y
+        )
+        if iso:
+            return iso
 
-    # Datum: dd.mm.yyyy
-    m = re.search(
-        r"\bDatum\s*:\s*([0-3]?\d)[.\-/ ]+([01]?\d)[.\-/ ]+((?:19|20)?\d{2})\b", head, re.I
-    )
-    if m:
-        d, mo, y = int(m.group(1)), int(m.group(2)), _norm_year(m.group(3))
-        try:
-            return date(y, mo, d).isoformat()
-        except Exception:
-            pass
+    for m in RE_DMY.finditer(t):
+        iso = _valid_date(
+            _norm_year(m.group(3)), int(m.group(2)), int(m.group(1)), min_y=min_y, max_y=max_y
+        )
+        if iso:
+            return iso
 
-    # vom/den dd.mm.yyyy
-    m = re.search(
-        r"\b(vom|den|ausgestellt\s+am)\s+([0-3]?\d)[.\-/ ]+([01]?\d)[.\-/ ]+((?:19|20)?\d{2})\b",
-        head,
-        re.I,
-    )
-    if m:
-        d, mo, y = int(m.group(2)), int(m.group(3)), _norm_year(m.group(4))
-        try:
-            return date(y, mo, d).isoformat()
-        except Exception:
-            pass
-
-    # month name
-    m = re.search(
-        r"\b([0-3]?\d)\.\s*(januar|februar|maerz|märz|april|mai|juni|juli|august|september|oktober|november|dezember)\s+((?:19|20)\d{2})\b",
-        head,
-        re.I,
-    )
+    m = RE_MONTHNAME.search(t)
     if m:
         d = int(m.group(1))
-        mo = MONTHS[m.group(2).lower()]
+        mon = _MONTHS[m.group(2).lower()]
         y = int(m.group(3))
-        try:
-            return date(y, mo, d).isoformat()
-        except Exception:
-            pass
-
-    # fallback: first plausible dd.mm.yyyy anywhere in head
-    for m in re.finditer(r"\b([0-3]?\d)[.\-/ ]+([01]?\d)[.\-/ ]+((?:19|20)?\d{2})\b", head):
-        d, mo, y = int(m.group(1)), int(m.group(2)), _norm_year(m.group(3))
-        try:
-            return date(y, mo, d).isoformat()
-        except Exception:
-            continue
+        return _valid_date(y, mon, d, min_y=min_y, max_y=max_y)
 
     return None
 
 
-def add_one_month_iso(d: str) -> str | None:
+def add_one_month(iso_date: str) -> Optional[str]:
     try:
-        y, m, day = map(int, d.split("-"))
-    except Exception:
-        return None
-    nm = m + 1
-    ny = y + (nm - 1) // 12
-    nm = ((nm - 1) % 12) + 1
-    last = calendar.monthrange(ny, nm)[1]
-    nd = min(day, last)
-    try:
-        return date(ny, nm, nd).isoformat()
+        y, m, d = map(int, iso_date.split("-"))
+        nm = m + 1
+        ny = y + (nm - 1) // 12
+        nm = ((nm - 1) % 12) + 1
+        last = calendar.monthrange(ny, nm)[1]
+        nd = min(d, last)
+        return _date(ny, nm, nd).isoformat()
     except Exception:
         return None
 
 
-def extract_aktenzeichen(text: str) -> list[str]:
-    t = text.replace("\x00", " ").replace("\r", "\n")
+# ---------------------------
+# Aktenzeichen extraction
+# ---------------------------
+
+RE_AZ_LABEL = re.compile(
+    r"\b(?:Az\.?|Aktenzeichen|Gz\.?|Gesch\.?-?\s*Z(?:eichen)?|Geschäftszeichen|Zeichen)\s*[:\-]?\s*"
+    r"([A-Za-zÄÖÜäöüß0-9][A-Za-zÄÖÜäöüß0-9 .\-\/]{3,80})",
+    re.I,
+)
+
+RE_COURT = re.compile(r"\b\d{1,3}\s*[A-Z]{1,3}\s*\d{1,6}\/\d{2,4}\b")
+
+
+def extract_aktenzeichen(text: str, settings: Settings) -> List[str]:
+    cfg = settings.heuristics.get("aktenzeichen", {})
+    min_len = int(cfg["min_length"])
+    ignore_numeric_only = bool(cfg["ignore_numeric_only"])
+
+    t = (text or "").replace("\x00", " ").replace("\r", "\n")
     t = re.sub(r"[ \t]+", " ", t)
 
-    cands: list[str] = []
+    cands: List[str] = []
 
-    # Labeled fields
-    label_pat = re.compile(
-        r"\b(?:Az\.?|Aktenzeichen|Gz\.?|Gesch\.?-?\s*Z(?:eichen)?|Geschäftszeichen|Mein\s+Zeichen|Zeichen|BG-?Nummer|Bedarfsgemeinschaft)\s*[:\-]?\s*"
-        r"([A-Za-zÄÖÜäöüß0-9][A-Za-zÄÖÜäöüß0-9 .\-\/]{2,80})",
-        re.I,
-    )
-    for m in label_pat.finditer(t):
+    for m in RE_AZ_LABEL.finditer(t):
         s = m.group(1).strip()
-        # cut common trailing fields
-        s = re.split(
-            r"\s{2,}|\bDatum\b|\bSeite\b|\bTelefon\b|\bTelefax\b|\bE-?Mail\b", s, 1, flags=re.I
-        )[0].strip()
-        s = re.sub(r"\s+", " ", s)
-        if len(s) >= 3 and re.search(r"\d", s):
+        s = re.split(r"\s{2,}|\n", s, 1)[0].strip()
+        s = re.sub(r"\s+", " ", s).strip(".,;")
+        if len(s) >= min_len:
             cands.append(s)
 
-    # Court-style AZ patterns (rough but useful)
-    court_pat = re.compile(
-        r"\b(?:[A-Z]\s*)?\d{1,3}\s*[A-Z]{1,4}\s*\d{1,6}\/\d{2,4}(?:\s*[A-Z]{1,3})?(?:\s*[A-Z][a-z]{0,2})?\b"
-    )
-    for m in court_pat.finditer(t):
-        cands.append(re.sub(r"\s+", " ", m.group(0)).strip())
+    for m in RE_COURT.finditer(t):
+        s = re.sub(r"\s+", " ", m.group(0)).strip(".,;")
+        if len(s) >= min_len:
+            cands.append(s)
 
-    # BG-Nummer format like 66402//0031882
-    for m in re.finditer(r"\b\d{3,8}\/\/\d{3,12}\b", t):
-        cands.append(m.group(0))
-
-    # Dedup & filter phone-like
+    out: List[str] = []
     seen = set()
-    out = []
     for s in cands:
-        s = s.strip().strip(".,;")
         if not re.search(r"\d", s):
             continue
-        if re.fullmatch(r"[0-9][0-9 \-()/]{6,}", s):
+        if ignore_numeric_only and re.fullmatch(r"[0-9][0-9 \-()/]{6,}", s):
             continue
         if s not in seen:
             seen.add(s)
             out.append(s)
-    return out[:12]
+    return out
 
 
-def guess_area(text: str) -> str:
-    t = text.lower()
-
-    def has(*w: str) -> bool:
-        return any(x.lower() in t for x in w)
-
-    # A) Recht/Behörden (strong)
-    if has(
-        "jobcenter",
-        "bürgergeld",
-        "sgb ii",
-        "sgb2",
-        "ablehnungsbescheid",
-        "bescheid",
-        "widerspruch",
-        "klage",
-        "sozialgericht",
-        "verwaltungsgericht",
-        "aktenzeichen",
-        "rechtsbehelfsbelehr",
-        "zustellung",
-        "beA",
-        "anwalt",
-        "vollmacht",
-        "kanzlei",
-    ):
-        return "05_RECHT_BEHOERDEN"
-
-    # C) Versicherungen (before Gesundheit/Finanzen to avoid “Krankenkasse” misrouting)
-    if has(
-        "krankenkasse",
-        "pflegeversicherung",
-        "rentenversicherung",
-        "berufsgenossenschaft",
-        "versicherungsschein",
-        "police",
-        "leistungsbescheid",
-    ):
-        return "10_VERSICHERUNGEN"
-
-    # B) Gesundheit
-    if has(
-        "klinik",
-        "krankenhaus",
-        "arzt",
-        "therapie",
-        "diagnose",
-        "entlassungsbericht",
-        "befund",
-        "reha",
-        "psychotherapie",
-        "arbeitsunfähigkeit",
-        "au",
-    ):
-        return "02_GESUNDHEIT"
-
-    # D) Bildung/Beruf
-    if has(
-        "bafög",
-        "bafoeg",
-        "immatrikulation",
-        "prüfungsamt",
-        "prüfung",
-        "leistungsnachweis",
-        "praktikum",
-        "arbeitsvertrag",
-        "zeugnis",
-        "hochschule",
-        "iu",
-    ):
-        return "03_BILDUNG_BERUF"
-
-    # E) Finanzen
-    if has(
-        "kontoauszug",
-        "rechnung",
-        "mahnung",
-        "zahlung",
-        "lastschrift",
-        "finanzamt",
-        "steuer",
-        "kredit",
-        "darlehen",
-        "depot",
-        "bank",
-        "gebühren",
-        "iban",
-        "bic",
-    ):
-        return "04_FINANZEN"
-
-    # F) Wohnen/Mobilität
-    if has(
-        "miete",
-        "mietvertrag",
-        "kaution",
-        "nebskosten",
-        "nebenkosten",
-        "hausverwaltung",
-        "wohnung",
-        "öpnv",
-        "bahn",
-        "ticket",
-        "kfz",
-        "auto",
-    ):
-        return "06_WOHNEN_MOBILITAET"
-
-    # K) System/Meta
-    if has(
-        "systemd",
-        "journalctl",
-        "stderr",
-        "stacktrace",
-        "traceback",
-        "config",
-        "yaml",
-        "json",
-        "logfile",
-        "unit file",
-        "bash",
-        "python",
-    ):
-        return "98_SYSTEM_META"
-
-    # J) Nachweise/Protokolle
-    if has(
-        "teilnahmebescheinigung",
-        "bestätigung",
-        "quittung",
-        "einlieferungsbeleg",
-        "protokoll",
-        "nachweis",
-    ):
-        return "11_NACHWEISE_PROTOKOLLE"
-
-    # I) Wissen/Referenzen
-    if has(
-        "doi",
-        "abstract",
-        "introduction",
-        "literatur",
-        "paper",
-        "tutorial",
-        "guide",
-        "referenz",
-        "notizen",
-    ):
-        return "09_WISSEN_REFERENZEN"
-
-    # H) Projekte
-    if has(
-        "roadmap",
-        "spec",
-        "spezifikation",
-        "todo",
-        "aurenyx",
-        "operator-system",
-        "konzept",
-        "projektplan",
-    ):
-        return "07_PROJEKTE"
-
-    # L) Korrespondenz (nur wenn sonst nichts triggert)
-    if has(
-        "sehr geehrte", "mit freundlichen grüßen", "freundliche grüße", "email", "e-mail", "betreff"
-    ):
-        return "08_KORRESPONDENZ"
-
-    # G) Persönlich fallback
-    return "01_PERSOENLICH"
+# ---------------------------
+# Area classification (settings-driven)
+# ---------------------------
 
 
-def guess_frist(text: str, area: str, datum: str | None) -> str | None:
-    if area != "05_RECHT_BEHOERDEN" or not datum:
+@dataclass(frozen=True)
+class AreaHit:
+    area_id: str
+    priority: int
+    hard: bool
+    score: int
+    matched: List[str]
+    tags: List[str]
+
+
+def guess_area(text: str, settings: Settings) -> Tuple[Optional[str], List[str], List[AreaHit]]:
+    """
+    Settings-driven classifier:
+    - Closed-world areas from categories.yaml
+    - Uses keyword hits with scoring
+    - Hard categories (e.g. 05_RECHT_BEHOERDEN) override
+    - 08_KORRESPONDENZ is *never* chosen if any other area also hits
+    Returns: (best_area_id, tags, debug_hits)
+    """
+    t = _norm(text)
+    areas = settings.categories["areas"]
+
+    hits: List[AreaHit] = []
+    for a in areas:
+        area_id = str(a["id"])
+        priority = int(a["priority"])
+        hard = bool(a["hard"])
+        keywords = a["keywords"]
+        tags = a["tags"]
+
+        matched = [kw for kw in keywords if _norm(kw) in t]
+        if not matched:
+            continue
+
+        # score: count hits + small bonus for longer keywords (reduces noise)
+        score = len(matched) + sum(1 for kw in matched if len(kw) >= 10)
+
+        hits.append(
+            AreaHit(
+                area_id=area_id,
+                priority=priority,
+                hard=hard,
+                score=score,
+                matched=matched[:25],
+                tags=list(tags)[:8],
+            )
+        )
+
+    if not hits:
+        return None, [], []
+
+    # hard override: best (lowest priority) among hard hits
+    hard_hits = [h for h in hits if h.hard]
+    if hard_hits:
+        hard_hits.sort(key=lambda h: (h.priority, -h.score, h.area_id))
+        best = hard_hits[0]
+        return best.area_id, best.tags[:3], hits
+
+    # general best: priority first, then score
+    hits.sort(key=lambda h: (h.priority, -h.score, h.area_id))
+
+    # correspondence is last resort
+    if hits[0].area_id == "08_KORRESPONDENZ" and any(h.area_id != "08_KORRESPONDENZ" for h in hits):
+        best_non = next(h for h in hits if h.area_id != "08_KORRESPONDENZ")
+        return best_non.area_id, best_non.tags[:3], hits
+
+    best = hits[0]
+    return best.area_id, best.tags[:3], hits
+
+
+def frist_from_text(text: str, settings: Settings, *, base_date: Optional[str]) -> Optional[str]:
+    if not base_date:
         return None
-    t = text.lower()
-    if (
-        ("rechtsbehelfsbelehr" in t)
-        or ("innerhalb eines monats" in t)
-        or ("widerspruch" in t and "monat" in t)
-        or ("klage" in t and "monat" in t)
-    ):
-        return add_one_month_iso(datum)
+    t = _norm(text)
+    triggers = settings.heuristics["frist"]["one_month_triggers"]
+    for pat in triggers:
+        try:
+            if re.search(pat, t, flags=re.I):
+                return add_one_month(base_date)
+        except re.error:
+            if _norm(pat) in t:
+                return add_one_month(base_date)
     return None

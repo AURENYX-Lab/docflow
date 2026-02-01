@@ -1,71 +1,134 @@
 from __future__ import annotations
+
+import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
-import os
+from typing import Optional
+
+from src.docflow.settings import Settings, SettingsPaths, load_settings
+
+
+class ConfigError(RuntimeError):
+    pass
 
 
 @dataclass(frozen=True)
-class Config:
+class AppPaths:
     archiv_root: Path
     inbox_dir: Path
-    suggestions_dir: Path
-    logs_dir: Path
-    applied_dir: Path
+    log_dir: Path
+    quarantine_dir: Path
+    manifests_dir: Path
 
-    obsidian_vault: Path | None
-    obsidian_notes_root: str
+    def ensure_dirs(self) -> None:
+        self.archiv_root.mkdir(parents=True, exist_ok=True)
+        self.inbox_dir.mkdir(parents=True, exist_ok=True)
+        self.log_dir.mkdir(parents=True, exist_ok=True)
+        self.quarantine_dir.mkdir(parents=True, exist_ok=True)
+        self.manifests_dir.mkdir(parents=True, exist_ok=True)
 
-    ollama_host: str
+
+@dataclass(frozen=True)
+class LLMConfig:
     ollama_model: str
-    ollama_keep_alive: str
     ollama_timeout_s: int
-
-    max_text_bytes: int
-    front_pages: int
-    dist_pages: int
-    dist_start_pct: int
-    dist_end_pct: int
-
-    dry_run: bool
+    ollama_bin: str
 
 
-def load_config(dry_run: bool = False) -> Config:
-    home = Path.home()
+@dataclass(frozen=True)
+class AppConfig:
+    """
+    Single source of runtime truth.
+    - paths: filesystem roots
+    - settings: validated YAML governance (mandatory)
+    - llm: local model runtime config
+    """
 
-    archiv_root = Path(os.getenv("ARCHIV_ROOT", str(home / "Documents" / "ARCHIV"))).expanduser()
-    inbox_dir = Path(os.getenv("INBOX_DIR", str(archiv_root / "99_TEMP_EINGANG"))).expanduser()
+    paths: AppPaths
+    settings: Settings
+    llm: LLMConfig
 
-    suggestions_dir = inbox_dir / "_suggestions"
-    logs_dir = inbox_dir / "_logs"
-    applied_dir = inbox_dir / "_applied"
+    # conservative folder name policy for ARCHIV_ROOT/<AREA>/<YEAR>/
+    year_dir_pattern: re.Pattern[str] = re.compile(r"^(19|20)\d{2}$")
 
-    obs_vault = os.getenv("OBSIDIAN_VAULT", "").strip()
-    obsidian_vault = Path(obs_vault).expanduser() if obs_vault else None
-    obsidian_notes_root = os.getenv("OBSIDIAN_NOTES_ROOT", "ARCHIV_NOTES").strip()
+    @staticmethod
+    def load(
+        *,
+        archiv_root: Optional[Path] = None,
+        inbox_dir: Optional[Path] = None,
+        settings_dir: Optional[Path] = None,
+        ollama_model: Optional[str] = None,
+        ollama_timeout_s: Optional[int] = None,
+        ollama_bin: Optional[str] = None,
+    ) -> "AppConfig":
+        """
+        NO DEFAULT SETTINGS.
+        YAML settings MUST exist and validate, otherwise raise.
+        """
+        home = Path.home()
 
-    cfg = Config(
-        archiv_root=archiv_root,
-        inbox_dir=inbox_dir,
-        suggestions_dir=suggestions_dir,
-        logs_dir=logs_dir,
-        applied_dir=applied_dir,
-        obsidian_vault=obsidian_vault,
-        obsidian_notes_root=obsidian_notes_root,
-        ollama_host=os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434").strip(),
-        ollama_model=os.getenv("MODEL", "llama3.1:8b-instruct-q4_K_M").strip(),
-        ollama_keep_alive=os.getenv("OLLAMA_KEEP_ALIVE", "30m").strip(),
-        ollama_timeout_s=int(os.getenv("OLLAMA_TIMEOUT", "1800")),
-        max_text_bytes=int(os.getenv("MAX_BYTES", "9000")),
-        front_pages=int(os.getenv("FRONT_PAGES", "3")),
-        dist_pages=int(os.getenv("DIST_PAGES", "1")),
-        dist_start_pct=int(os.getenv("DIST_START_PCT", "20")),
-        dist_end_pct=int(os.getenv("DIST_END_PCT", "90")),
-        dry_run=dry_run,
-    )
+        ar = (
+            (archiv_root or Path(os.environ.get("ARCHIV_ROOT", home / "Documents" / "ARCHIV")))
+            .expanduser()
+            .resolve()
+        )
+        ib = (
+            (inbox_dir or Path(os.environ.get("INBOX_DIR", ar / "99_TEMP_EINGANG")))
+            .expanduser()
+            .resolve()
+        )
 
-    # Ensure dirs exist
-    cfg.suggestions_dir.mkdir(parents=True, exist_ok=True)
-    cfg.logs_dir.mkdir(parents=True, exist_ok=True)
-    cfg.applied_dir.mkdir(parents=True, exist_ok=True)
+        log_dir = Path(os.environ.get("DOCFLOW_LOG_DIR", ib / "_logs")).expanduser().resolve()
+        quar_dir = (
+            Path(os.environ.get("DOCFLOW_QUAR_DIR", ib / "_quarantine")).expanduser().resolve()
+        )
+        manifests_dir = (
+            Path(os.environ.get("DOCFLOW_MANIFESTS_DIR", ib / "_manifests")).expanduser().resolve()
+        )
 
-    return cfg
+        sd_env = os.environ.get("DOCFLOW_SETTINGS_DIR")
+        sd = settings_dir or (Path(sd_env) if sd_env else None)
+        if sd is None:
+            # project-local settings directory (editable install)
+            sd = Path(__file__).resolve().parents[1] / "settings"
+        sd = sd.expanduser().resolve()
+
+        # MANDATORY: settings must exist and validate
+        settings = load_settings(SettingsPaths(settings_dir=sd))
+
+        model = ollama_model or os.environ.get(
+            "DOCFLOW_OLLAMA_MODEL", "llama3.1:8b-instruct-q4_K_M"
+        )
+        timeout = (
+            ollama_timeout_s
+            if ollama_timeout_s is not None
+            else int(os.environ.get("DOCFLOW_OLLAMA_TIMEOUT_S", "1800"))
+        )
+        binpath = ollama_bin or os.environ.get("DOCFLOW_OLLAMA_BIN", "ollama")
+
+        paths = AppPaths(
+            archiv_root=ar,
+            inbox_dir=ib,
+            log_dir=log_dir,
+            quarantine_dir=quar_dir,
+            manifests_dir=manifests_dir,
+        )
+
+        llm = LLMConfig(
+            ollama_model=model,
+            ollama_timeout_s=timeout,
+            ollama_bin=binpath,
+        )
+
+        return AppConfig(paths=paths, settings=settings, llm=llm)
+
+    def ensure_dirs(self) -> None:
+        self.paths.ensure_dirs()
+
+    def allowed_area_ids(self) -> list[str]:
+        return self.settings.allowed_area_ids()
+
+    def validate_area_id(self, area_id: str) -> None:
+        if area_id not in set(self.allowed_area_ids()):
+            raise ConfigError(f"Unknown area_id '{area_id}'. Allowed: {self.allowed_area_ids()}")

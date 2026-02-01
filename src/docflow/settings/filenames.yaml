@@ -1,0 +1,12 @@
+schema: "{date}_{short}_{source}_{status}.pdf"
+
+limits:
+  max_total: 160
+  short_desc: 56
+  source: 32
+  status: 24
+
+fallbacks:
+  short: "dokument"
+  source: "quelle"
+  status: "offen"

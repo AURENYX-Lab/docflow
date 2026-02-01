@@ -1,53 +1,63 @@
 from __future__ import annotations
-from typing import Any
-import json
 
-TOP_KEYS = [
-    "input_pdf",
-    "suggested_area",
-    "suggested_year",
-    "suggested_filename",
-    "doc_title",
-    "summary",
-    "key_points",
-    "yaml",
-]
-YAML_KEYS = ["typ", "bereich", "datum", "quelle", "aktenzeichen", "frist", "status", "tags"]
+from typing import Any, Dict, List, Optional
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 
-def validate_doc(obj: dict[str, Any]) -> None:
-    # additionalProperties False for top-level
-    extra = set(obj.keys()) - set(TOP_KEYS)
-    if extra:
-        raise ValueError(f"Top-level has extra keys not allowed: {sorted(extra)}")
+class YamlMeta(BaseModel):
+    """
+    YAML frontmatter-like metadata container.
+    extra keys allowed (you may add more later without breaking schema).
+    """
 
-    missing = [k for k in TOP_KEYS if k not in obj]
-    if missing:
-        raise ValueError(f"Missing required keys: {missing}")
+    model_config = ConfigDict(extra="allow")
 
-    if not isinstance(obj["suggested_year"], int):
-        raise ValueError("suggested_year must be integer")
-
-    if not isinstance(obj["key_points"], list) or not all(
-        isinstance(x, str) for x in obj["key_points"]
-    ):
-        raise ValueError("key_points must be array of strings")
-
-    y = obj["yaml"]
-    if not isinstance(y, dict):
-        raise ValueError("yaml must be object")
-
-    missing_y = [k for k in YAML_KEYS if k not in y]
-    if missing_y:
-        raise ValueError(f"yaml missing required keys: {missing_y}")
-
-    if not isinstance(y["aktenzeichen"], list) or not all(
-        isinstance(x, str) for x in y["aktenzeichen"]
-    ):
-        raise ValueError("yaml.aktenzeichen must be array of strings")
-    if not isinstance(y["tags"], list) or not all(isinstance(x, str) for x in y["tags"]):
-        raise ValueError("yaml.tags must be array of strings")
+    typ: Optional[str] = None
+    bereich: Optional[str] = None
+    datum: Optional[str] = None  # YYYY-MM-DD or null
+    quelle: Optional[str] = None
+    aktenzeichen: List[str] = Field(default_factory=list)
+    frist: Optional[str] = None  # YYYY-MM-DD or null
+    status: Optional[str] = None
+    tags: List[str] = Field(default_factory=list)
 
 
-def dumps_min(obj: dict[str, Any]) -> str:
-    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+class Suggestion(BaseModel):
+    """
+    Strict top-level schema: no additional properties.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    input_pdf: str
+    suggested_area: str
+    suggested_year: int
+    suggested_filename: str
+    doc_title: str
+    summary: str
+    key_points: List[str] = Field(default_factory=list)
+    yaml: YamlMeta
+
+
+def validate_suggestion_dict(obj: Dict[str, Any]) -> Suggestion:
+    return Suggestion.model_validate(obj)
+
+
+def validate_suggestion_against_settings(sug: Suggestion, *, allowed_area_ids: List[str]) -> None:
+    if sug.suggested_area not in set(allowed_area_ids):
+        raise ValueError(f"suggested_area '{sug.suggested_area}' not in allowed areas")
+
+    if not (1900 <= int(sug.suggested_year) <= 2100):
+        raise ValueError(f"suggested_year out of range: {sug.suggested_year}")
+
+    if not sug.suggested_filename.lower().endswith(".pdf"):
+        raise ValueError("suggested_filename must end with .pdf")
+
+    if len(sug.key_points) > 25:
+        raise ValueError("key_points too long (cap at 25)")
+
+    # minimal sanity: forbid empty title/summary
+    if not sug.doc_title.strip():
+        raise ValueError("doc_title must be non-empty")
+    if not sug.summary.strip():
+        raise ValueError("summary must be non-empty")
