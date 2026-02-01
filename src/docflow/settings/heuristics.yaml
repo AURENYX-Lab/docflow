@@ -1,3 +1,4 @@
+# docflow/src/docflow/settings/heuristics.yaml
 date_detection:
   min_year: 1990
   max_year: 2100
@@ -17,3 +18,24 @@ extraction:
   max_chars: 9000
   front_pages: 3
   dist_pages: 1
+
+source_guess:
+  rules:
+    - source: "jobcenter"
+      keywords: ["jobcenter", "bürgergeld", "sgb ii", "kundennummer", "bg-nummer"]
+
+    - source: "bafoeg"
+      keywords: ["bafög", "bafoeg", "amt für ausbildungsförderung", "ausbildungsförderung"]
+
+    - source: "sozialgericht"
+      keywords: ["sozialgericht", "s ", "as ", "sg "]
+
+    - source: "verwaltungsgericht"
+      keywords: ["verwaltungsgericht", "ovg", "verwaltungsstreitverfahren"]
+
+    - source: "krankenkasse"
+      keywords: ["krankenkasse", "aok", "tk", "barmer", "dakt", "versicherungskarte"]
+
+    - source: "klinik"
+      keywords: ["klinik", "krankenhaus", "station", "entlassungsbericht", "arztbrief", "reha"]
+

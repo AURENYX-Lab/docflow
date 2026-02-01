@@ -1,0 +1,341 @@
+# settings/doctypes.yaml
+closed_world: true
+
+types:
+  # =========================================================
+  # HARD DocTypes (lenken Area stark via implies.likely_area)
+  # =========================================================
+
+  - id: BESCHEID
+    priority: 10
+    hard: true
+    keywords:
+      - bescheid
+      - bewilligungsbescheid
+      - ablehnungsbescheid
+      - widerspruchsbescheid
+      - rechtsbehelfsbelehrung
+      - gegen diesen bescheid
+      - widerspruchsfrist
+      - verwaltungsakt
+      - zustellung
+      - jobcenter
+      - bürgergeld
+      - sgb ii
+      - sgb i
+      - sgb x
+    implies:
+      likely_area: "05_RECHT_BEHOERDEN"
+      expected_fields: ["datum", "aktenzeichen", "frist"]
+
+  - id: WIDERSPRUCH
+    priority: 15
+    hard: true
+    keywords:
+      - widerspruch
+      - widerspruchsschreiben
+      - einlegung des widerspruchs
+      - hiermit lege ich widerspruch ein
+      - begründung des widerspruchs
+      - widerspruch begruendung
+    implies:
+      likely_area: "05_RECHT_BEHOERDEN"
+      expected_fields: ["datum", "aktenzeichen"]
+
+  - id: GERICHT_URTEIL_BESCHLUSS
+    priority: 22
+    hard: true
+    keywords:
+      - urteil
+      - beschluss
+      - im namen des volkes
+      - kosten des verfahrens
+      - rubrum
+      - sozialgericht
+      - verwaltungsgericht
+      - oberverwaltungsgericht
+    implies:
+      likely_area: "05_RECHT_BEHOERDEN"
+      expected_fields: ["datum", "aktenzeichen"]
+
+  - id: GERICHT_SCHRIFTSATZ
+    priority: 28
+    hard: true
+    keywords:
+      - klageschrift
+      - berufung
+      - antragsschrift
+      - schriftsatz
+      - namens und in vollmacht
+      - beantragt wird
+      - begruendung der klage
+      - begruendung der berufung
+      - sozialgericht
+      - verwaltungsgericht
+    implies:
+      likely_area: "05_RECHT_BEHOERDEN"
+      expected_fields: ["datum", "aktenzeichen"]
+
+  - id: ARZTBRIEF
+    priority: 25
+    hard: true
+    keywords:
+      - arztbrief
+      - entlassungsbrief
+      - entlassungsbericht
+      - epikrise
+      - anamnese
+      - diagnose
+      - befund
+      - medikation
+      - klinik
+      - krankenhaus
+      - reha
+      - therapie
+      - psychotherapie
+    implies:
+      likely_area: "02_GESUNDHEIT"
+      expected_fields: ["datum"]
+
+  - id: VERTRAG
+    priority: 20
+    hard: true
+    keywords:
+      - vertrag
+      - vereinbarung
+      - vertragsparteien
+      - laufzeit
+      - kuendigung
+      - kündigung
+      - widerruf
+      - unterschrift
+      - agb
+    implies:
+      expected_fields: ["datum"]
+
+  # =========================================================
+  # SOFT Subtypen (liefert Typ, Area bleibt Regel-geleitet)
+  # =========================================================
+
+  - id: MIETVERTRAG
+    priority: 35
+    hard: false
+    keywords:
+      - mietvertrag
+      - miete
+      - kaution
+      - nebenkosten
+      - betriebskosten
+      - hausverwaltung
+      - wohnungsuebergabe
+      - wohnungsübergabe
+    implies:
+      expected_fields: ["datum"]
+
+  - id: ARBEITSVERTRAG
+    priority: 36
+    hard: false
+    keywords:
+      - arbeitsvertrag
+      - anstellungsvertrag
+      - arbeitgeber
+      - arbeitnehmer
+      - gehalt
+      - arbeitszeit
+      - probezeit
+      - kuendigung
+      - kündigung
+    implies:
+      expected_fields: ["datum"]
+
+  # =========================================================
+  # SOFT DocTypes (administrativ / alltag)
+  # =========================================================
+
+  - id: RECHNUNG
+    priority: 40
+    hard: false
+    keywords:
+      - rechnung
+      - rechnungsnummer
+      - zahlbar bis
+      - betrag
+      - gesamtbetrag
+      - iban
+      - ust-id
+      - netto
+      - brutto
+      - mahnung
+      - faellig
+      - fällig
+    implies:
+      likely_area: "04_FINANZEN"
+      expected_fields: ["datum", "quelle", "frist"]
+
+  - id: ZAHLUNGSNACHWEIS
+    priority: 45
+    hard: false
+    keywords:
+      - zahlungsnachweis
+      - ueberweisungsbeleg
+      - überweisungsbeleg
+      - kontoauszug
+      - buchung
+      - wertstellung
+      - valuta
+      - saldo
+      - kontostand
+    implies:
+      likely_area: "04_FINANZEN"
+      expected_fields: ["datum", "quelle"]
+
+  - id: QUITTUNG_BELEG
+    priority: 50
+    hard: false
+    keywords:
+      - quittung
+      - kassenbon
+      - bon
+      - kartenzahlung
+      - barzahlung
+      - mwst
+      - summe
+    implies:
+      likely_area: "04_FINANZEN"
+      expected_fields: ["datum", "quelle"]
+
+  - id: NACHWEIS
+    priority: 55
+    hard: false
+    keywords:
+      - nachweis
+      - bestätigung
+      - bestaetigung
+      - bescheinigung
+      - beleg
+    implies:
+      expected_fields: ["datum", "quelle"]
+
+  - id: INFORMATION
+    priority: 60
+    hard: false
+    keywords:
+      - informationsblatt
+      - hinweis
+      - merkblatt
+      - leitfaden
+      - faq
+    implies:
+      likely_area: "09_WISSEN_REFERENZEN"
+
+  - id: KORRESPONDENZ
+    priority: 90
+    hard: false
+    keywords:
+      - sehr geehrte
+      - sehr geehrter
+      - mit freundlichen gruessen
+      - mit freundlichen grüßen
+      - freundliche gruesse
+      - freundliche grüsse
+      - betreff
+      - anbei
+    implies:
+      likely_area: "08_KORRESPONDENZ"
+
+  # =========================================================
+  # WISSENS-, STUDIEN- & CHAOS-TYPEN (Dateilabyrinth)
+  # =========================================================
+
+  - id: BUCH
+    priority: 70
+    hard: false
+    keywords:
+      - isbn
+      - auflage
+      - verlag
+      - herausgeber
+      - inhaltsverzeichnis
+      - literaturverzeichnis
+      - bibliographie
+    implies:
+      likely_area: "09_WISSEN_REFERENZEN"
+
+  - id: PAPER_ARTIKEL
+    priority: 74
+    hard: false
+    keywords:
+      - abstract
+      - introduction
+      - methodology
+      - methods
+      - results
+      - discussion
+      - doi
+      - references
+      - journal
+    implies:
+      likely_area: "09_WISSEN_REFERENZEN"
+
+  - id: STUDIENSKRIPT
+    priority: 78
+    hard: false
+    keywords:
+      - modul
+      - lehrveranstaltung
+      - pruefungsleistung
+      - prüfungsleistung
+      - ects
+      - lernziele
+      - dozent
+      - semester
+    implies:
+      likely_area: "03_BILDUNG_BERUF"
+
+  - id: SKRIPT_HANDOUT
+    priority: 82
+    hard: false
+    keywords:
+      - skript
+      - handout
+      - mitschrift
+      - zusammenfassung
+      - stichpunkte
+    implies:
+      likely_area: "03_BILDUNG_BERUF"
+
+  - id: VORLESUNGSFOLIEN
+    priority: 86
+    hard: false
+    keywords:
+      - folien
+      - präsentation
+      - praesentation
+      - agenda
+      - learning objectives
+      - slide
+    implies:
+      likely_area: "03_BILDUNG_BERUF"
+
+  - id: NOTIZEN
+    priority: 88
+    hard: false
+    keywords:
+      - notizen
+      - gedanken
+      - draft
+      - entwurf
+    implies:
+      likely_area: "07_PROJEKTE"
+
+  - id: SAMMLUNG_MISC
+    priority: 99
+    hard: false
+    keywords:
+      - sammlung
+      - materialien
+      - unterlagen
+      - miscellaneous
+      - misc
+    implies:
+      likely_area: "09_WISSEN_REFERENZEN"

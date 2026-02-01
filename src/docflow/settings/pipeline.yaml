@@ -1,14 +1,27 @@
-pipeline:
-  ocr:
-    enabled: true
-    skip_if_text_quality_ok: true
+# docflow/src/docflow/settings/pipeline.yaml
+ocr:
+  enabled: true
+  skip_if_text_quality_ok: true
+suggest:
+  use_llm: true
+  llm_fallback_only: false
+  ollama_timeout_s: 1800
+apply:
+  require_human_verify: true
+  copy_instead_of_move: true
+  write_obsidian_note: false
+  collision_policy: "suffix"
+  audit_manifest: "~/.local/share/docflow/audit.jsonl"
+  approval:
+    mode: "sidecar_file"
+    json_flag_field: "approved"
+    json_flag_value: true
+    sidecar_suffix: ".approved"
+  # nur nötig, wenn write_obsidian_note: true
+  obsidian:
+    vault_root: "~/Obsidian/Private-Vault/"
+    notes_dir: "70_Archive/Documents/docflow_notes"
+    include_frontmatter: true
+    link_style: "relative"
+    file_name_mode: "pdf_name"
 
-  suggest:
-    use_llm: true
-    llm_fallback_only: false
-    ollama_timeout_s: 1800
-
-  apply:
-    require_human_verify: true
-    copy_instead_of_move: true
-    write_obsidian_note: true

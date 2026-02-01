@@ -1,3 +1,4 @@
+# docflow/src/docflow/settings/prompts.yaml
 suggest:
   system: |
     Du bist ein offline laufender Dokumenten-Assistent.
@@ -6,7 +7,9 @@ suggest:
   schema_rules: |
     WICHTIG:
     - Du darfst NUR dieses Schema ausgeben (genau diese Top-Level Keys, keine weiteren):
-      input_pdf, suggested_area, suggested_year, suggested_filename, doc_title, summary, key_points, yaml
+      input_pdf, suggested_area, suggested_year, suggested_filename, doc_type, doc_title, summary, key_points, yaml
+      - doc_type MUSS ein Wert aus ALLOWED_DOC_TYPES sein (CLOSED WORLD). Kein Freitext.
+      - yaml.typ MUSS exakt dem doc_type entsprechen.
     - Gib ausschließlich MINIFIED JSON aus (eine Zeile, keine Zeilenumbrüche).
     - Kein Text vor/nach dem JSON. Keine Codefences.
     - Datumsformat in yaml.datum: YYYY-MM-DD. Wenn unsicher: null.
@@ -16,6 +19,7 @@ suggest:
     - Klassifiziere das Dokument in eine Area aus der CLOSED-WORLD Liste (wird separat geliefert).
     - Erzeuge doc_title, summary (3-6 Sätze, ohne Adresse/Email/Telefon), key_points (3-8 Stichpunkte).
     - Fülle yaml: typ, bereich, datum, quelle, aktenzeichen[], frist, status, tags[].
+    - Klassifiziere zusätzlich doc_type aus der CLOSED-WORLD Liste (wird separat geliefert).
 
 jsonfix:
   repair_instructions: |

@@ -1,3 +1,4 @@
+# docflow/src/docflow/core/extract.py
 from __future__ import annotations
 
 import math
@@ -92,3 +93,16 @@ def sample_text(pdf_path: Path, plan: ExtractPlan) -> str:
     if len(txt) > plan.max_chars:
         txt = txt[: plan.max_chars]
     return txt.strip()
+
+
+def build_text_budgeted_sample(cfg: "AppConfig", pdf_path: Path) -> str:
+    """
+    Convenience entrypoint used by pipelines:
+    uses settings.heuristics.extract.{max_chars,front_pages,dist_pages}
+    """
+    plan = ExtractPlan(
+        max_chars=int(cfg.settings.heuristics.extract.max_chars),
+        front_pages=int(cfg.settings.heuristics.extract.front_pages),
+        dist_pages=int(cfg.settings.heuristics.extract.dist_pages),
+    )
+    return sample_text(pdf_path, plan)

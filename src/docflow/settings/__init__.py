@@ -1,55 +1,5 @@
-from __future__ import annotations
+# docflow/src/docflow/settings/__init__.py
+from .models import Settings, SettingsPaths
+from .defaults import load_settings, SettingsError
 
-from .models import (
-    AreaConfig,
-    CategoriesConfig,
-    CategoriesRules,
-    ExtractConfig,
-    DateDetectionConfig,
-    AktenzeichenConfig,
-    FristConfig,
-    SourceGuessRule,
-    SourceGuessConfig,
-    HeuristicsConfig,
-    FilenameLimits,
-    FilenameFallbacks,
-    FilenamesConfig,
-    SuggestPromptConfig,
-    PromptsConfig,
-    OCRQualityConfig,
-    OCRConfig,
-    PipelineOCRConfig,
-    PipelineSuggestConfig,
-    PipelineApplyConfig,
-    PipelineConfig,
-    Settings,
-    SettingsPaths,
-)
-from .loader import load_settings
-
-__all__ = [
-    "AreaConfig",
-    "CategoriesConfig",
-    "CategoriesRules",
-    "ExtractConfig",
-    "DateDetectionConfig",
-    "AktenzeichenConfig",
-    "FristConfig",
-    "SourceGuessRule",
-    "SourceGuessConfig",
-    "HeuristicsConfig",
-    "FilenameLimits",
-    "FilenameFallbacks",
-    "FilenamesConfig",
-    "SuggestPromptConfig",
-    "PromptsConfig",
-    "OCRQualityConfig",
-    "OCRConfig",
-    "PipelineOCRConfig",
-    "PipelineSuggestConfig",
-    "PipelineApplyConfig",
-    "PipelineConfig",
-    "Settings",
-    "SettingsPaths",
-    "load_settings",
-]
+__all__ = ["Settings", "SettingsPaths", "load_settings", "SettingsError"]

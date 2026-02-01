@@ -1,0 +1,18 @@
+# docflow/src/docflow/settings/ocr.yaml
+quality:
+  pages_cap: 250
+  sample_pct: 0.20
+  sample_min_pages: 8
+  min_text_pages: 0.90
+  min_chars_per_page: 100
+  min_words_per_page: 15
+
+ocrmypdf:
+  langs: "deu+eng"
+  jobs: 4
+  output_type: "pdfa"
+  optimize: 3
+  clean: true
+  deskew: true
+  rotate_pages: true
+  extra_args: []

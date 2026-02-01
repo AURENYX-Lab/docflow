@@ -1,8 +1,9 @@
+# docflow/src/docflow/core/discovery.py
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
 from .config import AppConfig
 
@@ -15,13 +16,11 @@ class Area:
 
 def areas_from_settings(cfg: AppConfig) -> List[Area]:
     """
-    We do NOT infer categories from filesystem.
-    The YAML settings define the closed-world list of areas.
+    Closed-world: YAML defines areas, not filesystem inference.
     """
-    out: List[Area] = []
-    for area_id in cfg.allowed_area_ids():
-        out.append(Area(id=area_id, path=cfg.paths.archiv_root / area_id))
-    return out
+    return [
+        Area(id=area_id, path=cfg.paths.archiv_root / area_id) for area_id in cfg.allowed_area_ids()
+    ]
 
 
 def area_path(cfg: AppConfig, area_id: str) -> Path:
@@ -35,3 +34,13 @@ def year_path(cfg: AppConfig, area_id: str, year: int) -> Path:
     if not cfg.year_dir_pattern.match(y):
         raise ValueError(f"Invalid year '{year}'")
     return cfg.paths.archiv_root / area_id / y
+
+
+def list_pdfs(inbox_dir: Path) -> List[Path]:
+    """
+    Lists PDFs in inbox root (top-level only), stable order.
+    """
+    p = Path(inbox_dir)
+    if not p.exists():
+        return []
+    return sorted([x for x in p.iterdir() if x.is_file() and x.suffix.lower() == ".pdf"])

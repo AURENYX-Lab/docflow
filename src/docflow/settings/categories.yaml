@@ -1,3 +1,4 @@
+# docflow/src/docflow/settings/categories.yaml
 # CLOSED WORLD: areas are authoritative.
 closed_world: true
 

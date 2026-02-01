@@ -1,3 +1,4 @@
+# docflow/src/docflow/core/config.py
 from __future__ import annotations
 
 import os
@@ -6,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
-from src.docflow.settings import Settings, SettingsPaths, load_settings
+from docflow.settings import Settings, SettingsPaths, load_settings
 
 
 class ConfigError(RuntimeError):
@@ -38,18 +39,10 @@ class LLMConfig:
 
 @dataclass(frozen=True)
 class AppConfig:
-    """
-    Single source of runtime truth.
-    - paths: filesystem roots
-    - settings: validated YAML governance (mandatory)
-    - llm: local model runtime config
-    """
-
     paths: AppPaths
     settings: Settings
     llm: LLMConfig
 
-    # conservative folder name policy for ARCHIV_ROOT/<AREA>/<YEAR>/
     year_dir_pattern: re.Pattern[str] = re.compile(r"^(19|20)\d{2}$")
 
     @staticmethod
@@ -62,10 +55,6 @@ class AppConfig:
         ollama_timeout_s: Optional[int] = None,
         ollama_bin: Optional[str] = None,
     ) -> "AppConfig":
-        """
-        NO DEFAULT SETTINGS.
-        YAML settings MUST exist and validate, otherwise raise.
-        """
         home = Path.home()
 
         ar = (
@@ -90,12 +79,12 @@ class AppConfig:
         sd_env = os.environ.get("DOCFLOW_SETTINGS_DIR")
         sd = settings_dir or (Path(sd_env) if sd_env else None)
         if sd is None:
-            # project-local settings directory (editable install)
             sd = Path(__file__).resolve().parents[1] / "settings"
         sd = sd.expanduser().resolve()
 
-        # MANDATORY: settings must exist and validate
-        settings = load_settings(SettingsPaths(settings_dir=sd))
+        # YAML Pflicht, Loader validiert alles
+        paths_obj = SettingsPaths(settings_dir=sd)
+        settings = load_settings(sd, paths_obj)
 
         model = ollama_model or os.environ.get(
             "DOCFLOW_OLLAMA_MODEL", "llama3.1:8b-instruct-q4_K_M"
@@ -115,11 +104,7 @@ class AppConfig:
             manifests_dir=manifests_dir,
         )
 
-        llm = LLMConfig(
-            ollama_model=model,
-            ollama_timeout_s=timeout,
-            ollama_bin=binpath,
-        )
+        llm = LLMConfig(ollama_model=model, ollama_timeout_s=timeout, ollama_bin=binpath)
 
         return AppConfig(paths=paths, settings=settings, llm=llm)
 
@@ -130,5 +115,13 @@ class AppConfig:
         return self.settings.allowed_area_ids()
 
     def validate_area_id(self, area_id: str) -> None:
-        if area_id not in set(self.allowed_area_ids()):
-            raise ConfigError(f"Unknown area_id '{area_id}'. Allowed: {self.allowed_area_ids()}")
+        allowed = set(self.allowed_area_ids())
+        if area_id not in allowed:
+            raise ConfigError(f"Unknown area_id '{area_id}'. Allowed: {sorted(allowed)}")
+
+
+# ✅ CLI-kompatibler Wrapper (damit __main__.py nicht dauernd bricht)
+def load_config(*, dry_run: bool = False) -> AppConfig:
+    cfg = AppConfig.load()
+    cfg.ensure_dirs()
+    return cfg

@@ -1,3 +1,4 @@
+# docflow/src/docflow/settings/filenames.yaml
 schema: "{date}_{short}_{source}_{status}.pdf"
 
 limits:
