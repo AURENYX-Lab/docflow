@@ -22,3 +22,9 @@ docflow = "docflow.cli.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/docflow"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+]

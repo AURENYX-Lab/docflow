@@ -3,46 +3,78 @@
 ├── .gitignore
 ├── project-structure.txt
 ├── pyproject.toml
+├── .pytest_cache
+│   ├── CACHEDIR.TAG
+│   ├── .gitignore
+│   ├── README.md
+│   └── v
+│       └── cache
+│           ├── lastfailed
+│           └── nodeids
+├── pytest.ini
 ├── README.md
-└── src
-    └── docflow
+├── src
+│   └── docflow
+│       ├── apply
+│       │   ├── filesystem.py
+│       │   ├── obsidian.py
+│       │   ├── pipeline.py
+│       │   └── verify.py
+│       ├── cli
+│       │   └── __main__.py
+│       ├── core
+│       │   ├── audit.py
+│       │   ├── config.py
+│       │   ├── discovery.py
+│       │   ├── extract.py
+│       │   ├── heuristics.py
+│       │   ├── naming.py
+│       │   └── schema.py
+│       ├── __init__.py
+│       ├── ocr
+│       │   ├── pipeline.py
+│       │   ├── preflight.py
+│       │   └── quality.py
+│       ├── settings
+│       │   ├── categories.yaml
+│       │   ├── defaults.py
+│       │   ├── doctypes.yaml
+│       │   ├── filenames.yaml
+│       │   ├── heuristics.yaml
+│       │   ├── __init__.py
+│       │   ├── models.py
+│       │   ├── ocr.yaml
+│       │   ├── pipeline.yaml
+│       │   └── prompts.yaml
+│       └── suggest
+│           ├── jsonfix.py
+│           ├── ollama_client.py
+│           ├── pipeline.py
+│           ├── postprocess.py
+│           ├── prompt.py
+│           └── verify.py
+└── tests
+    ├── conftest.py
+    ├── integration
+    │   ├── test_apply_dry_run_is_write_free.py
+    │   └── test_cli_smoke.py
+    └── unit
         ├── apply
-        │   ├── filesystem.py
-        │   ├── obsidian.py
-        │   ├── pipeline.py
-        │   └── verify.py
+        │   ├── test_approval_gate_and_loader.py
+        │   └── test_fileops_collision_policy.py
         ├── cli
-        │   └── __main__.py
+        │   └── test_parser_contract.py
         ├── core
-        │   ├── audit.py
-        │   ├── config.py
-        │   ├── discovery.py
-        │   ├── extract.py
-        │   ├── heuristics.py
-        │   ├── naming.py
-        │   └── schema.py
-        ├── __init__.py
-        ├── ocr
-        │   ├── pipeline.py
-        │   ├── preflight.py
-        │   └── quality.py
+        │   └── test_audit_logger.py
+        ├── heuristics
+        │   └── test_extractors_and_area_guess.py
         ├── settings
-        │   ├── categories.yaml
-        │   ├── defaults.py
-        │   ├── doctypes.yaml
-        │   ├── filenames.yaml
-        │   ├── heuristics.yaml
-        │   ├── __init__.py
-        │   ├── models.py
-        │   ├── ocr.yaml
-        │   ├── pipeline.yaml
-        │   └── prompts.yaml
+        │   ├── test_closed_world_validators.py
+        │   ├── test_loader_required_files.py
+        │   └── test_sha256_fingerprint.py
         └── suggest
-            ├── jsonfix.py
-            ├── ollama_client.py
-            ├── pipeline.py
-            ├── postprocess.py
-            ├── prompt.py
-            └── verify.py
+            ├── test_jsonfix.py
+            ├── test_postprocess_invariants.py
+            └── test_suggestion_schema_and_verify.py
 
-9 directories, 37 files
+21 directories, 57 files
