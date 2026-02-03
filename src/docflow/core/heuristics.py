@@ -243,7 +243,7 @@ def extract_aktenzeichen(text: str, settings: Settings) -> List[str]:
 
     for m in RE_AZ_LABEL.finditer(t):
         s = m.group(1).strip()
-        s = re.split(r"\s{2,}|\n", s, 1)[0].strip()
+        s = re.split(r"\s{2,}|\n", s, maxsplit=1)[0].strip()
         s = re.sub(r"\s+", " ", s).strip(".,;")
         if len(s) >= min_len:
             cands.append(s)
