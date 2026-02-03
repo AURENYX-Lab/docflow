@@ -43,9 +43,9 @@ def _minimal_valid_suggestion(*, input_pdf: str) -> dict:
 
 
 def test_load_suggestion_json_hard_fails_if_marked_invalid(tmp_path: Path) -> None:
-    pytest.xfail(
-        "Suggestion schema forbids '_invalid/_errors' until contract adds invalid markers."
-    )
+    # pytest.xfail(
+    #    "Suggestion schema forbids '_invalid/_errors' until contract adds invalid markers."
+    # )
     sj = tmp_path / "x.suggest.json"
     obj = _minimal_valid_suggestion(input_pdf=str(tmp_path / "in.pdf"))
     obj["_invalid"] = True
@@ -70,7 +70,7 @@ def test_load_suggestion_json_rejects_non_object(tmp_path: Path) -> None:
 
 
 def test_is_approved_json_flag_true(tmp_path: Path) -> None:
-    pytest.xfail("Suggestion schema forbids top-level 'approved' until contract adds it.")
+    # pytest.xfail("Suggestion schema forbids top-level 'approved' until contract adds it.")
     sj = tmp_path / "x.suggest.json"
     obj = _minimal_valid_suggestion(input_pdf=str(tmp_path / "in.pdf"))
     obj["approved"] = True

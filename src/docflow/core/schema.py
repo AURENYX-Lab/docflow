@@ -4,7 +4,8 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
+from pydantic.config import ConfigDict
 
 if TYPE_CHECKING:
     from docflow.settings import Settings
@@ -98,7 +99,17 @@ class Suggestion(BaseModel):
     Strict top-level schema: no additional properties.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        populate_by_name=True,  # allow reading/writing by field name as well
+    )
+
+    # --- Contract markers (must be schema-valid) ---
+    invalid: bool = Field(False, alias="_invalid")
+    errors: List[str] = Field(default_factory=list, alias="_errors")
+    warnings: List[str] = Field(default_factory=list, alias="_warnings")
+    # optional approval flag (top-level)
+    approved: Optional[bool] = None
 
     input_pdf: str
     suggested_area: str
@@ -109,14 +120,6 @@ class Suggestion(BaseModel):
     summary: str
     key_points: List[str] = Field(default_factory=list)
     yaml: YamlMeta
-
-    # Contract: optional approval flag (top-level)
-    approved: Optional[bool] = None
-
-    # optional: falls du diese Felder bereits nutzt
-    _invalid: Optional[bool] = None
-    _errors: Optional[List[str]] = None
-    _warnings: Optional[List[str]] = None
 
 
 def validate_suggestion_dict(obj: Dict[str, Any]) -> Suggestion:
@@ -160,5 +163,6 @@ def validate_suggestion_against_settings(
 
     if not sug.doc_title.strip():
         raise ValueError("doc_title must be non-empty")
+
     if not sug.summary.strip():
         raise ValueError("summary must be non-empty")

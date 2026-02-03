@@ -60,13 +60,13 @@ def load_suggestion_json(path: Path) -> SuggestionRecord:
     if not isinstance(obj, dict):
         raise ApplyVerifyError(f"Suggestion JSON must be object: {path.name}")
 
-    # Strict schema validation (structure + internal consistency)
-    validate_suggestion_dict(obj)
+    suggestion = validate_suggestion_dict(obj)
 
-    # If suggest marked it invalid, treat as hard stop unless user forces later
-    if obj.get("_invalid") is True:
-        errs = obj.get("_errors")
-        raise ApplyVerifyError(f"Suggestion marked invalid: {path.name} errors={errs}")
+    if suggestion.invalid:
+        errs = getattr(suggestion, "errors", []) or []
+        preview = ", ".join(str(x) for x in errs[:3])  # bounded + deterministic
+        suffix = f" errors=[{preview}]" if preview else ""
+        raise ApplyVerifyError(f"Suggestion marked invalid: {path.name}{suffix}")
 
     return SuggestionRecord(suggestion_path=path, data=obj)
 
