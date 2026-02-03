@@ -25,6 +25,10 @@ REQUIRED_FILES = (
 )
 
 
+def _read_yaml(p: Path) -> Dict[str, Any]:
+    return yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+
+
 def _read_yaml_required(path: Path) -> Dict[str, Any]:
     if not path.exists():
         raise SettingsError(f"Missing required settings file: {path}")
@@ -58,6 +62,12 @@ def load_settings(settings_dir: Path, paths: SettingsPaths) -> Settings:
         )
 
     raw = {name: _read_yaml_required(settings_dir / name) for name in REQUIRED_FILES}
+
+    categories = _read_yaml(Path(settings_dir) / "categories.yaml")
+
+    # ✅ Hard Truth: closed_world muss explizit true sein
+    if categories.get("closed_world") is not True:
+        raise SettingsError("categories.yaml: closed_world must be true (explicit).")
 
     data = {
         "settings_dir": str(settings_dir),

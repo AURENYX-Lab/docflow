@@ -6,7 +6,7 @@ from docflow.settings.defaults import load_settings, SettingsError
 from docflow.settings.models import SettingsPaths
 
 
-def _paths(tmp_path) -> SettingsPaths:
+def _paths(settings_dir: Path) -> SettingsPaths:
     return SettingsPaths(settings_dir=str(settings_dir))
 
 
@@ -21,7 +21,7 @@ def test_categories_closed_world_false_fails(tmp_settings_dir, tmp_path):
         p.write_text("closed_world: false\n" + txt, encoding="utf-8")
 
     with pytest.raises(SettingsError) as e:
-        load_settings(tmp_settings_dir, _paths(tmp_path))
+        load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
     assert "closed_world" in str(e.value).lower()
 
 
@@ -32,5 +32,5 @@ def test_categories_closed_world_missing_fails(tmp_settings_dir, tmp_path):
     p.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     with pytest.raises(SettingsError) as e:
-        load_settings(tmp_settings_dir, _paths(tmp_path))
+        load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
     assert "closed_world" in str(e.value).lower()

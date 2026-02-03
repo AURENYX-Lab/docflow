@@ -5,7 +5,7 @@ import pytest
 from docflow.core.schema import validate_suggestion_dict, validate_suggestion_against_settings
 
 
-def make_min_suggestion(
+def _make_min_suggestion(
     *, input_pdf: str, area: str, year: int, filename: str, doc_type: str
 ) -> dict:
     return {
@@ -37,7 +37,7 @@ def test_suggestion_extra_fields_forbidden(tmp_pdf, tmp_settings_dir, tmp_path):
 
     settings = load_settings(
         tmp_settings_dir,
-        SettingsPaths(settings_dir=str(settings_dir)),
+        SettingsPaths(settings_dir=str(tmp_settings_dir)),
     )
     area = settings.allowed_area_ids()[0]
     doc_type = settings.allowed_doc_type_ids()[0]
@@ -60,7 +60,7 @@ def test_validate_suggestion_rejects_unknown_area(tmp_pdf, tmp_settings_dir, tmp
 
     settings = load_settings(
         tmp_settings_dir,
-        SettingsPaths(settings_dir=str(settings_dir)),
+        SettingsPaths(settings_dir=str(tmp_settings_dir)),
     )
     doc_type = settings.allowed_doc_type_ids()[0]
 
@@ -72,10 +72,9 @@ def test_validate_suggestion_rejects_unknown_area(tmp_pdf, tmp_settings_dir, tmp
     with pytest.raises(ValueError) as e:
         validate_suggestion_against_settings(
             sug,
+            settings=settings,
             allowed_area_ids=settings.allowed_area_ids(),
             allowed_doc_type_ids=settings.allowed_doc_type_ids(),
-            min_year=1990,
-            max_year=2100,
         )
     assert "allowed areas" in str(e.value).lower() or "not allowed" in str(e.value).lower()
 
@@ -86,7 +85,7 @@ def test_validate_suggestion_year_range_enforced(tmp_pdf, tmp_settings_dir, tmp_
 
     settings = load_settings(
         tmp_settings_dir,
-        SettingsPaths(settings_dir=str(settings_dir)),
+        SettingsPaths(settings_dir=str(tmp_settings_dir)),
     )
     area = settings.allowed_area_ids()[0]
     doc_type = settings.allowed_doc_type_ids()[0]
@@ -99,10 +98,9 @@ def test_validate_suggestion_year_range_enforced(tmp_pdf, tmp_settings_dir, tmp_
     with pytest.raises(ValueError) as e:
         validate_suggestion_against_settings(
             sug,
+            settings=settings,
             allowed_area_ids=settings.allowed_area_ids(),
             allowed_doc_type_ids=settings.allowed_doc_type_ids(),
-            min_year=1990,
-            max_year=2100,
         )
     assert "year" in str(e.value).lower() and "range" in str(e.value).lower()
 
@@ -113,7 +111,7 @@ def test_validate_suggestion_filename_must_end_with_pdf(tmp_pdf, tmp_settings_di
 
     settings = load_settings(
         tmp_settings_dir,
-        SettingsPaths(settings_dir=str(settings_dir)),
+        SettingsPaths(settings_dir=str(tmp_settings_dir)),
     )
     area = settings.allowed_area_ids()[0]
     doc_type = settings.allowed_doc_type_ids()[0]
@@ -126,9 +124,8 @@ def test_validate_suggestion_filename_must_end_with_pdf(tmp_pdf, tmp_settings_di
     with pytest.raises(ValueError) as e:
         validate_suggestion_against_settings(
             sug,
+            settings=settings,
             allowed_area_ids=settings.allowed_area_ids(),
             allowed_doc_type_ids=settings.allowed_doc_type_ids(),
-            min_year=1990,
-            max_year=2100,
         )
     assert ".pdf" in str(e.value).lower()

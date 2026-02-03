@@ -167,6 +167,10 @@ class PostprocessResult:
     suggestion: Dict[str, Any]
     warnings: List[str]
 
+    @property
+    def ok(self) -> bool:
+        return not bool(self.suggestion.get("_invalid"))
+
 
 def postprocess_suggestion(
     *,

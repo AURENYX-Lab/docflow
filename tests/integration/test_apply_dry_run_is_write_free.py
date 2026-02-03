@@ -39,7 +39,6 @@ def test_apply_dry_run_does_not_write_to_archiv(
         "doc_title": "t",
         "summary": "s",
         "key_points": ["k"],
-        "tags": [],
         "yaml": {
             "typ": "DT",
             "bereich": "A",

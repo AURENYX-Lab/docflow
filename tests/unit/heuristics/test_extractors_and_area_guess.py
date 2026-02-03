@@ -18,7 +18,7 @@ from docflow.core.heuristics import (
 )
 
 
-def _paths(tmp_path: Path, settings_dir: Path) -> SettingsPaths:
+def _paths(settings_dir: Path) -> SettingsPaths:
     return SettingsPaths(settings_dir=str(settings_dir))
 
 
@@ -46,7 +46,7 @@ def test_add_one_month_handles_end_of_month() -> None:
 
 
 def test_extract_aktenzeichen_finds_common_patterns(tmp_settings_dir: Path, tmp_path: Path) -> None:
-    settings = load_settings(tmp_settings_dir, _paths(tmp_path, tmp_settings_dir))
+    settings = load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
 
     text = """
     Verwaltungsgericht Beispielstadt
@@ -62,7 +62,7 @@ def test_extract_aktenzeichen_finds_common_patterns(tmp_settings_dir: Path, tmp_
 def test_extract_date_detects_iso_like_or_german_date(
     tmp_settings_dir: Path, tmp_path: Path
 ) -> None:
-    settings = load_settings(tmp_settings_dir, _paths(tmp_path, tmp_settings_dir))
+    settings = load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
 
     # We don't enforce exact algorithm detail; we enforce that a clear date is detected.
     text = "Bescheid vom 03.02.2026 bezüglich irgendwas."
@@ -72,7 +72,7 @@ def test_extract_date_detects_iso_like_or_german_date(
 
 
 def test_guess_area_uses_closed_world_keywords(tmp_settings_dir: Path, tmp_path: Path) -> None:
-    settings = load_settings(tmp_settings_dir, _paths(tmp_path, tmp_settings_dir))
+    settings = load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
     allowed = settings.allowed_area_ids()
 
     area_id, kw = _pick_area_and_keyword(tmp_settings_dir)
@@ -83,6 +83,6 @@ def test_guess_area_uses_closed_world_keywords(tmp_settings_dir: Path, tmp_path:
     res = guess_area(text, settings, allowed_areas=allowed)
 
     # guess_area returns a mapping in your code path, parsed by _parse_guess_area_result elsewhere.
-    assert isinstance(res, dict), f"expected dict result, got {type(res)}"
-    assert res.get("area_id") == area_id, f"expected area_id={area_id}, got {res}"
-    assert res.get("area_id") in allowed, "Closed World: result must be in allowed_areas"
+    assert isinstance(res, tuple), f"expected tuple result, got {type(res)}"
+    area_id = res[0]
+    assert area_id in allowed

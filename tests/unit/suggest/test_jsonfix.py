@@ -18,4 +18,3 @@ def test_jsonfix_rejects_when_no_json_object_found() -> None:
     res = extract_and_parse_json("no json here ...")
     assert res.ok is False
     assert "No JSON object found" in (res.error or "")
-    assert "No JSON object found" in str(e.value) or "json" in str(e.value).lower()

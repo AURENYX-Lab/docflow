@@ -110,13 +110,25 @@ class Suggestion(BaseModel):
     key_points: List[str] = Field(default_factory=list)
     yaml: YamlMeta
 
+    # Contract: optional approval flag (top-level)
+    approved: Optional[bool] = None
+
+    # optional: falls du diese Felder bereits nutzt
+    _invalid: Optional[bool] = None
+    _errors: Optional[List[str]] = None
+    _warnings: Optional[List[str]] = None
+
 
 def validate_suggestion_dict(obj: Dict[str, Any]) -> Suggestion:
     return Suggestion.model_validate(obj)
 
 
 def validate_suggestion_against_settings(
-    sug: Suggestion, *, allowed_area_ids: List[str], allowed_doc_type_ids: List[str]
+    sug: Suggestion,
+    settings: Settings,
+    *,
+    allowed_area_ids: List[str],
+    allowed_doc_type_ids: List[str],
 ) -> None:
     min_year = int(settings.heuristics.date_detection.min_year)
     max_year = int(settings.heuristics.date_detection.max_year)

@@ -8,14 +8,14 @@ from docflow.settings.models import SettingsPaths
 from docflow.suggest.postprocess import postprocess_suggestion
 
 
-def _paths(tmp_path: Path, settings_dir: Path) -> SettingsPaths:
+def _paths(settings_dir: Path) -> SettingsPaths:
     return SettingsPaths(settings_dir=str(settings_dir))
 
 
 def test_postprocess_never_lets_llm_override_heuristic_area(
     tmp_settings_dir: Path, tmp_path: Path, tmp_pdf: Path
 ) -> None:
-    settings = load_settings(tmp_settings_dir, _paths(tmp_path, tmp_settings_dir))
+    settings = load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
     allowed_areas = settings.allowed_area_ids()
 
     # authoritative heuristic base
@@ -27,7 +27,6 @@ def test_postprocess_never_lets_llm_override_heuristic_area(
         "doc_title": "H",
         "summary": "H",
         "key_points": ["k"],
-        "tags": [],
         "yaml": {
             "typ": settings.allowed_doc_type_ids()[0],
             "bereich": allowed_areas[0],
@@ -53,7 +52,7 @@ def test_postprocess_never_lets_llm_override_heuristic_area(
         input_pdf=str(tmp_pdf),
         extracted_text="irrelevant",
         allowed_areas=allowed_areas,
-        allowed_doc_types=allowed_doc_types,
+        allowed_doc_types=settings.allowed_doc_type_ids(),
         llm_obj=llm_obj,
         heuristic_base=heuristic_base,
     )
@@ -68,7 +67,7 @@ def test_postprocess_never_lets_llm_override_heuristic_area(
 def test_postprocess_marks_invalid_when_schema_breaks(
     tmp_settings_dir: Path, tmp_path: Path, tmp_pdf: Path
 ) -> None:
-    settings = load_settings(tmp_settings_dir, _paths(tmp_path, tmp_settings_dir))
+    settings = load_settings(tmp_settings_dir, _paths(tmp_settings_dir))
     allowed_areas = settings.allowed_area_ids()
 
     heuristic_base = {
@@ -79,7 +78,6 @@ def test_postprocess_marks_invalid_when_schema_breaks(
         "doc_title": "H",
         "summary": "H",
         "key_points": ["k"],
-        "tags": [],
         "yaml": {
             "typ": settings.allowed_doc_type_ids()[0],
             "bereich": allowed_areas[0],
@@ -100,6 +98,7 @@ def test_postprocess_marks_invalid_when_schema_breaks(
         input_pdf=str(tmp_pdf),
         extracted_text="irrelevant",
         allowed_areas=allowed_areas,
+        allowed_doc_types=settings.allowed_doc_type_ids(),
         llm_obj=llm_obj,
         heuristic_base=heuristic_base,
     )

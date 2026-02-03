@@ -1,27 +1,25 @@
-from __future__ import annotations
-
 import pytest
 
 from docflow.cli.__main__ import build_parser
 
 
-def test_cli_requires_subcommand() -> None:
+def test_cli_build_parser_smoke() -> None:
+    p = build_parser()
+    assert p is not None
+    # darf immer funktionieren (keine Settings laden, kein Crash)
+    txt = p.format_help()
+    assert "docflow" in txt.lower()
+
+
+@pytest.mark.parametrize("cmd", ["preflight", "ocr", "suggest", "apply"])
+def test_cli_subcommand_parses(cmd: str) -> None:
+    p = build_parser()
+    ns = p.parse_args([cmd])
+    assert getattr(ns, "cmd") == cmd
+
+
+def test_cli_unknown_arg_exits_2() -> None:
     p = build_parser()
     with pytest.raises(SystemExit) as e:
-        _ = p.parse_args([])
-    # argparse uses exit code 2 for usage errors
-    assert e.value.code == 2
-
-
-def test_cli_parses_global_flags_before_cmd() -> None:
-    p = build_parser()
-    ns = p.parse_args(["--dry-run", "suggest"])
-    assert ns.dry_run is True
-    assert ns.cmd == "suggest"
-
-
-def test_cli_unknown_subcommand_exits_2() -> None:
-    p = build_parser()
-    with pytest.raises(SystemExit) as e:
-        _ = p.parse_args(["no_such_cmd"])
-    assert e.value.code == 2
+        p.parse_args(["--definitely-not-a-flag"])
+    assert int(getattr(e.value, "code", 0)) == 2

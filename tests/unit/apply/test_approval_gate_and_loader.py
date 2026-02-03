@@ -29,7 +29,6 @@ def _minimal_valid_suggestion(*, input_pdf: str) -> dict:
         "doc_title": "t",
         "summary": "s",
         "key_points": ["k1"],
-        "tags": [],
         "yaml": {
             "typ": "DT",
             "bereich": "A",
@@ -78,7 +77,7 @@ def test_is_approved_json_flag_true(tmp_path: Path) -> None:
     _write_suggestion(sj, obj)
 
     # Ensure schema stays valid (guard against future schema tightening).
-    _ = validate_suggestion_dict(obj)
+    # schema validation happens in load_suggestion_json(); approval tests focus on approval logic
 
     rec = load_suggestion_json(sj)
     policy = ApprovalPolicy(
@@ -97,7 +96,7 @@ def test_is_approved_json_flag_false(tmp_path: Path) -> None:
     obj["approved"] = False
     _write_suggestion(sj, obj)
 
-    _ = validate_suggestion_dict(obj)
+    # schema validation happens in load_suggestion_json(); approval tests focus on approval logic
 
     rec = load_suggestion_json(sj)
     policy = ApprovalPolicy(
@@ -115,7 +114,7 @@ def test_is_approved_sidecar_file(tmp_path: Path) -> None:
     obj = _minimal_valid_suggestion(input_pdf=str(tmp_path / "in.pdf"))
     _write_suggestion(sj, obj)
 
-    _ = validate_suggestion_dict(obj)
+    # schema validation happens in load_suggestion_json(); approval tests focus on approval logic
 
     rec = load_suggestion_json(sj)
     policy = ApprovalPolicy(
