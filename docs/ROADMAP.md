@@ -185,22 +185,32 @@ The goal is to ensure that docflow behaves predictably as a command-line tool.
 
 # Future Directions
 
-After the core architecture stabilizes, several areas may be explored.
+After the core architecture stabilizes, several extensions may be explored.
 
-Possible directions include:
+## Archive Capabilities
 
 - archive visualization tools
-    
 - metadata search capabilities
-    
 - automated archive validation
-    
 - heuristic feedback loops based on verified suggestions
-    
 - plugin architecture for extending heuristics and pipelines
-    
 
-These ideas extend the system beyond document ingestion toward a more general deterministic archive workflow.
+## Knowledge Enrichment
+
+Possible higher-level knowledge features include:
+
+- separate summary contract for derived outputs
+- LLM-generated short summaries
+- structured key point extraction
+- entity extraction (persons, institutions, cases, files)
+- entity-based backlinking for Obsidian or similar systems
+- task and deadline extraction
+- thematic tagging for Obsidian linking
+- uncertainty markers for probabilistic outputs
+- source-linked excerpts or page references where available
+- explicit distinction between canonical metadata and derived knowledge
+
+These extensions would move docflow beyond deterministic archive metadata toward structured knowledge extraction.
 
 ---
 
@@ -213,6 +223,7 @@ deterministic workflows
 + AI-assisted suggestions
 + human approval gates
 + verifiable audit trails
+= controlled automation
 ```
 
 This pattern enables controlled automation in environments where traceability and reproducibility are critical.
