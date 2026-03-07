@@ -6,14 +6,14 @@ import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Sequence
+from typing import Any, Dict, Optional
 
 from docflow.core.extract import build_text_budgeted_sample
 from docflow.core.schema import DOCFLOW_JSON_SCHEMA
 
 from .jsonfix import extract_and_parse_json
 from .ollama_client import OllamaClient
-from .postprocess import postprocess_suggestion, _heuristic_base_from_extraction
+from .postprocess import _heuristic_base_from_extraction, postprocess_suggestion
 from .prompt import SuggestPrompt
 from .verify import verify_suggestion
 
@@ -87,7 +87,11 @@ def run_suggest_batch(
     client = OllamaClient(model=cfg.llm.ollama_model, timeout_s=timeout_s)
 
     pdfs = sorted(
-        [p for p in paths.inbox_dir.iterdir() if p.is_file() and p.suffix.lower() == ".pdf"]
+        [
+            p
+            for p in paths.inbox_dir.iterdir()
+            if p.is_file() and p.suffix.lower() == ".pdf"
+        ]
     )
 
     processed = 0
@@ -179,6 +183,7 @@ def run_suggest_batch(
 
         vr = verify_suggestion(
             pp.suggestion,
+            settings=settings,
             allowed_areas=allowed_areas,
             allowed_doc_types=allowed_doc_types,
             min_year=int(settings.heuristics.date_detection.min_year),

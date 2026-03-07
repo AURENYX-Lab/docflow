@@ -5,8 +5,7 @@ import os
 import re
 import subprocess
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple
-
+from typing import Dict, Optional
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
 
@@ -36,7 +35,9 @@ class OllamaClient:
     - supports timeouts
     """
 
-    def __init__(self, *, model: str, timeout_s: int = 1800, env: Optional[Dict[str, str]] = None):
+    def __init__(
+        self, *, model: str, timeout_s: int = 1800, env: Optional[Dict[str, str]] = None
+    ):
         self.model = model
         self.timeout_s = timeout_s
         self.env = env or {}
@@ -63,11 +64,16 @@ class OllamaClient:
             out = strip_ansi(proc.stdout.decode("utf-8", errors="ignore")).strip()
             err = strip_ansi(proc.stderr.decode("utf-8", errors="ignore")).strip()
             return OllamaResult(
-                ok=(proc.returncode == 0), stdout=out, stderr=err, returncode=proc.returncode
+                ok=(proc.returncode == 0),
+                stdout=out,
+                stderr=err,
+                returncode=proc.returncode,
             )
         except subprocess.TimeoutExpired as e:
             out = strip_ansi((e.stdout or b"").decode("utf-8", errors="ignore")).strip()
             err = strip_ansi((e.stderr or b"").decode("utf-8", errors="ignore")).strip()
-            return OllamaResult(ok=False, stdout=out, stderr=err, returncode=124, timed_out=True)
+            return OllamaResult(
+                ok=False, stdout=out, stderr=err, returncode=124, timed_out=True
+            )
         except FileNotFoundError as e:
             raise OllamaClientError("ollama not found in PATH") from e

@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import sys
 from dataclasses import dataclass
 from typing import List, Optional
 
@@ -26,7 +25,9 @@ def _which(cmd: str) -> Optional[str]:
 
 def _check_cmd_version(cmd: List[str]) -> bool:
     try:
-        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
+        subprocess.run(
+            cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+        )
         return True
     except Exception:
         return False
@@ -73,4 +74,6 @@ def run_preflight(*, strict: bool = True) -> PreflightReport:
             msg += "- notes:\n  " + "\n  ".join(notes) + "\n"
         raise PreflightError(msg.rstrip())
 
-    return PreflightReport(ok=ok, missing_tools=missing, python_deps_ok=python_ok, notes=notes)
+    return PreflightReport(
+        ok=ok, missing_tools=missing, python_deps_ok=python_ok, notes=notes
+    )

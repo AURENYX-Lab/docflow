@@ -2,15 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 from typing import Optional
 
+from docflow.apply.pipeline import ApplyOptions, ApplyPaths, run_apply_batch
 from docflow.core.config import AppConfig
-from docflow.ocr.preflight import run_preflight, PreflightError
-
-from docflow.suggest.pipeline import run_suggest_batch, SuggestPaths, SuggestOptions
-from docflow.apply.pipeline import run_apply_batch, ApplyPaths, ApplyOptions
-from docflow.ocr.pipeline import run_ocr_inbox, OCRPaths, OCRRunOptions
+from docflow.ocr.pipeline import OCRPaths, OCRRunOptions, run_ocr_inbox
+from docflow.ocr.preflight import PreflightError, run_preflight
+from docflow.suggest.pipeline import SuggestOptions, SuggestPaths, run_suggest_batch
 
 
 def _p(v: Optional[str]) -> Optional[Path]:

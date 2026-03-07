@@ -1,7 +1,6 @@
 # docflow/src/docflow/core/audit.py
 from __future__ import annotations
 
-import errno
 import hashlib
 import json
 import os
@@ -68,7 +67,10 @@ def _append_line_locked(path: Path, line: str) -> None:
 
 
 def append_jsonl(path: Path, obj: Dict[str, Any]) -> None:
-    line = json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n"
+    line = (
+        json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+        + "\n"
+    )
     _append_line_locked(path, line)
 
 

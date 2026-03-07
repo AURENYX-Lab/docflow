@@ -1,13 +1,14 @@
 # docflow/src/docflow/core/extract.py
 from __future__ import annotations
 
-import math
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Sequence
+from typing import List
 
 import pikepdf  # type: ignore
+
+from docflow.settings import Settings
 
 
 class ExtractError(RuntimeError):
@@ -40,10 +41,20 @@ def _evenly_spaced_indices(total: int, n: int) -> List[int]:
     return sorted(set(idx))
 
 
-def _pdftotext_one_page(pdf_path: Path, page_1based: int, *, timeout_s: int = 30) -> str:
+def _pdftotext_one_page(
+    pdf_path: Path, page_1based: int, *, timeout_s: int = 30
+) -> str:
     try:
         out = subprocess.check_output(
-            ["pdftotext", "-f", str(page_1based), "-l", str(page_1based), str(pdf_path), "-"],
+            [
+                "pdftotext",
+                "-f",
+                str(page_1based),
+                "-l",
+                str(page_1based),
+                str(pdf_path),
+                "-",
+            ],
             stderr=subprocess.DEVNULL,
             timeout=timeout_s,
         )
@@ -95,14 +106,14 @@ def sample_text(pdf_path: Path, plan: ExtractPlan) -> str:
     return txt.strip()
 
 
-def build_text_budgeted_sample(cfg: "AppConfig", pdf_path: Path) -> str:
+def build_text_budgeted_sample(settings: Settings, pdf_path: Path) -> str:
     """
     Convenience entrypoint used by pipelines:
     uses settings.heuristics.extract.{max_chars,front_pages,dist_pages}
     """
     plan = ExtractPlan(
-        max_chars=int(cfg.settings.heuristics.extract.max_chars),
-        front_pages=int(cfg.settings.heuristics.extract.front_pages),
-        dist_pages=int(cfg.settings.heuristics.extract.dist_pages),
+        max_chars=int(settings.heuristics.extract.max_chars),
+        front_pages=int(settings.heuristics.extract.front_pages),
+        dist_pages=int(settings.heuristics.extract.dist_pages),
     )
     return sample_text(pdf_path, plan)

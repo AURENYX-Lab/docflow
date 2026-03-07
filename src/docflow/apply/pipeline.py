@@ -4,7 +4,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from docflow.apply.filesystem import copy_or_move_pdf
 from docflow.apply.obsidian import NotePolicy, write_note
@@ -95,7 +95,11 @@ def run_apply_batch(
 
     # collect suggestions
     sug_files = sorted(
-        [p for p in paths.suggestions_dir.iterdir() if p.is_file() and p.name.endswith(".json")]
+        [
+            p
+            for p in paths.suggestions_dir.iterdir()
+            if p.is_file() and p.name.endswith(".json")
+        ]
     )
 
     approval_mode = approval_policy.mode  # "json_flag" | "sidecar_file"
@@ -128,7 +132,10 @@ def run_apply_batch(
 
         # sanity: allowed areas
         if sug.get("suggested_area") not in allowed:
-            _err(paths, f"{sj.name}: suggested_area not allowed: {sug.get('suggested_area')}")
+            _err(
+                paths,
+                f"{sj.name}: suggested_area not allowed: {sug.get('suggested_area')}",
+            )
             continue
 
         src_pdf = None

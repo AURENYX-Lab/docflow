@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple, cast
 
 from docflow.core.heuristics import (
     extract_aktenzeichen,
@@ -13,7 +13,6 @@ from docflow.core.heuristics import (
     guess_source,
 )
 from docflow.core.naming import build_suggested_filename
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from docflow.settings import Settings
@@ -55,7 +54,11 @@ def _heuristic_base_from_extraction(
     src = h_src or "quelle"
 
     # doc_type here is only used for text fields (title/short_desc). decision is still in postprocess.
-    typ = (h_typ or (allowed_doc_types[0] if allowed_doc_types else "DOKUMENT")).strip().upper()
+    typ = (
+        (h_typ or (allowed_doc_types[0] if allowed_doc_types else "DOKUMENT"))
+        .strip()
+        .upper()
+    )
 
     doc_title = f"{typ} – {src} – {y}"
 
@@ -239,10 +242,14 @@ def postprocess_suggestion(
 
     # --- Human-visible enriched fields (LLM allowed, with heuristic_base fallback) ---
     doc_title = (
-        _as_str(obj.get("doc_title")) or _as_str(heuristic_base.get("doc_title")) or "Dokument"
+        _as_str(obj.get("doc_title"))
+        or _as_str(heuristic_base.get("doc_title"))
+        or "Dokument"
     )
 
-    summary = _as_str(obj.get("summary")) or _as_str(heuristic_base.get("summary")) or "—"
+    summary = (
+        _as_str(obj.get("summary")) or _as_str(heuristic_base.get("summary")) or "—"
+    )
 
     key_points = _as_list_str(obj.get("key_points"))
     if not key_points:
@@ -304,9 +311,13 @@ def postprocess_suggestion(
     if iso_date is None:
         year = min_year
         if llm_date:
-            warnings.append(f"LLM suggested date '{llm_date}' ignored; heuristic date missing")
+            warnings.append(
+                f"LLM suggested date '{llm_date}' ignored; heuristic date missing"
+            )
         else:
-            warnings.append(f"No date detected; using year={min_year} (min_year) and datum=None")
+            warnings.append(
+                f"No date detected; using year={min_year} (min_year) and datum=None"
+            )
     else:
         # if date exists but year parsing failed or out of bounds, clamp deterministically
         if year is None:
@@ -329,7 +340,9 @@ def postprocess_suggestion(
 
     # --- Short description (LLM allowed; else heuristic_base; else doc_title) ---
     short_desc = (
-        _as_str(obj.get("short_desc")) or _as_str(heuristic_base.get("short_desc")) or doc_title
+        _as_str(obj.get("short_desc"))
+        or _as_str(heuristic_base.get("short_desc"))
+        or doc_title
     )
 
     suggested_filename = build_suggested_filename(
@@ -366,7 +379,9 @@ def postprocess_suggestion(
     if not doc_type:
         if allowed_doc_types:
             doc_type = str(allowed_doc_types[0])
-            warnings.append(f"No doc_type detected; using doc_type={doc_type} (first allowed)")
+            warnings.append(
+                f"No doc_type detected; using doc_type={doc_type} (first allowed)"
+            )
         else:
             # should never happen if settings are valid, but don't crash
             doc_type = "DOKUMENT"

@@ -4,10 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "docflow"
-version = "0.1.0"
-description = "Local PDF intake classification + audit + apply"
+version = "0.1.0.dev0"
+description = "Deterministic document pipeline for local archives"
 readme = "README.md"
 requires-python = ">=3.12,<3.15"
+
 dependencies = [
   "pydantic>=2.12,<3",
   "pyyaml>=6.0,<7",

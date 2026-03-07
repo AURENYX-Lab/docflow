@@ -5,8 +5,7 @@ import calendar
 import re
 from dataclasses import dataclass
 from datetime import date as _date
-from typing import Any, Dict, List, Optional, Sequence, Tuple
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple
 
 if TYPE_CHECKING:
     from docflow.settings import Settings
@@ -191,7 +190,11 @@ def extract_date(text: str, settings: Settings) -> Optional[str]:
 
     for m in RE_DMY.finditer(t):
         iso = _valid_date(
-            _norm_year(m.group(3)), int(m.group(2)), int(m.group(1)), min_y=min_y, max_y=max_y
+            _norm_year(m.group(3)),
+            int(m.group(2)),
+            int(m.group(1)),
+            min_y=min_y,
+            max_y=max_y,
         )
         if iso:
             return iso
@@ -271,7 +274,9 @@ def extract_aktenzeichen(text: str, settings: Settings) -> List[str]:
 # ---------------------------
 
 
-def frist_from_text(text: str, settings: Settings, *, base_date: Optional[str]) -> Optional[str]:
+def frist_from_text(
+    text: str, settings: Settings, *, base_date: Optional[str]
+) -> Optional[str]:
     if not base_date:
         return None
 
@@ -359,7 +364,9 @@ def guess_area(
 
     hits.sort(key=lambda h: (h.priority, -h.score, h.area_id))
 
-    if hits[0].area_id == "08_KORRESPONDENZ" and any(h.area_id != "08_KORRESPONDENZ" for h in hits):
+    if hits[0].area_id == "08_KORRESPONDENZ" and any(
+        h.area_id != "08_KORRESPONDENZ" for h in hits
+    ):
         best_non = next(h for h in hits if h.area_id != "08_KORRESPONDENZ")
         return best_non.area_id, best_non.tags[:3], hits
 

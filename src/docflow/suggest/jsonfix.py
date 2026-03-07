@@ -4,14 +4,16 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 
 class JsonFixError(ValueError):
     pass
 
 
-_JSON_BLOCK_RE = re.compile(r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL | re.IGNORECASE)
+_JSON_BLOCK_RE = re.compile(
+    r"```(?:json)?\s*(\{.*?\})\s*```", re.DOTALL | re.IGNORECASE
+)
 
 
 def _find_balanced_object(s: str) -> Optional[str]:
@@ -93,12 +95,14 @@ def extract_and_parse_json(text: str) -> JsonParseResult:
     candidate = _repair_common_json(candidate)
 
     if not candidate:
-        return JsonParseResult(ok=False, obj=None, raw_json="", error="No JSON object found")
+        return JsonParseResult(
+            ok=False, obj=None, raw_json="", error="No JSON object found"
+        )
 
     try:
         obj = json.loads(candidate)
         return JsonParseResult(ok=True, obj=obj, raw_json=candidate)
-    except Exception as e1:
+    except Exception:
         # second try: attempt to isolate object again after stripping
         candidate2 = _find_balanced_object(candidate) or candidate
         candidate2 = _repair_common_json(candidate2)
@@ -107,5 +111,8 @@ def extract_and_parse_json(text: str) -> JsonParseResult:
             return JsonParseResult(ok=True, obj=obj, raw_json=candidate2)
         except Exception as e2:
             return JsonParseResult(
-                ok=False, obj=None, raw_json=candidate2, error=f"{type(e2).__name__}: {e2}"
+                ok=False,
+                obj=None,
+                raw_json=candidate2,
+                error=f"{type(e2).__name__}: {e2}",
             )

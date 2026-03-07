@@ -10,6 +10,8 @@ from typing import List, Tuple
 
 import pikepdf  # type: ignore
 
+from docflow.settings import Settings
+
 
 class OCRQualityError(RuntimeError):
     pass
@@ -34,9 +36,9 @@ class QualityReport:
 
 def _safe_pdffonts_count(pdf: Path) -> int:
     try:
-        out = subprocess.check_output(["pdffonts", str(pdf)], stderr=subprocess.DEVNULL).decode(
-            "utf-8", errors="ignore"
-        )
+        out = subprocess.check_output(
+            ["pdffonts", str(pdf)], stderr=subprocess.DEVNULL
+        ).decode("utf-8", errors="ignore")
         lines = [ln for ln in out.strip().splitlines() if ln.strip()]
         # poppler prints 2 header lines typically
         return max(0, len(lines) - 2)
@@ -47,7 +49,15 @@ def _safe_pdffonts_count(pdf: Path) -> int:
 def _safe_pdftotext_page(pdf: Path, page_1based: int) -> Tuple[int, int, bool]:
     try:
         out = subprocess.check_output(
-            ["pdftotext", "-f", str(page_1based), "-l", str(page_1based), str(pdf), "-"],
+            [
+                "pdftotext",
+                "-f",
+                str(page_1based),
+                "-l",
+                str(page_1based),
+                str(pdf),
+                "-",
+            ],
             stderr=subprocess.DEVNULL,
         )
         txt = out.decode("utf-8", errors="ignore")
@@ -89,7 +99,11 @@ def _page_has_text_ops(page: pikepdf.Page) -> bool:
     return False
 
 
-def assess_pdf_text_quality(pdf_path: Path, q: OCRQualitySettings) -> QualityReport:
+def assess_pdf_text_quality(
+    pdf_path: Path,
+    settings: Settings,
+) -> QualityReport:
+    q = settings.ocr.quality
     """
     Decide whether to skip OCR based on sampled pages.
     "Good page" = has text operators AND pdftotext chars/words above thresholds.
@@ -138,7 +152,11 @@ def assess_pdf_text_quality(pdf_path: Path, q: OCRQualitySettings) -> QualityRep
             pt_ok_all = pt_ok_all and pt_ok
             chars_sum += chars
             words_sum += words
-            if has_ops and chars >= q.min_chars_per_page and words >= q.min_words_per_page:
+            if (
+                has_ops
+                and chars >= q.min_chars_per_page
+                and words >= q.min_words_per_page
+            ):
                 good += 1
 
     coverage = (good / checked) if checked else 0.0

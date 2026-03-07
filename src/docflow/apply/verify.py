@@ -4,9 +4,10 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from docflow.core.schema import validate_suggestion_dict
+from docflow.settings import Settings
 
 
 class ApplyVerifyError(ValueError):
@@ -25,7 +26,9 @@ class ApprovalPolicy:
         a = settings.pipeline.apply.approval
         mode = a.mode
         if mode not in ("json_flag", "sidecar_file"):
-            raise ApplyVerifyError("apply.approval.mode must be 'json_flag' or 'sidecar_file'")
+            raise ApplyVerifyError(
+                "apply.approval.mode must be 'json_flag' or 'sidecar_file'"
+            )
 
         if not a.json_flag_field.strip():
             raise ApplyVerifyError("apply.approval.json_flag_field must be non-empty")
@@ -55,7 +58,9 @@ def load_suggestion_json(path: Path) -> SuggestionRecord:
     try:
         obj = json.loads(path.read_text(encoding="utf-8"))
     except Exception as e:
-        raise ApplyVerifyError(f"Failed to parse JSON {path.name}: {type(e).__name__}: {e}") from e
+        raise ApplyVerifyError(
+            f"Failed to parse JSON {path.name}: {type(e).__name__}: {e}"
+        ) from e
 
     if not isinstance(obj, dict):
         raise ApplyVerifyError(f"Suggestion JSON must be object: {path.name}")
