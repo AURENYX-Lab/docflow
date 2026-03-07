@@ -146,10 +146,21 @@ Installation instructions will be added once the CLI stabilizes.
 ---
 
 ## Development Setup
+
+### uv (recommended)
 ```bash
-git clone https://github.com/AURENYX-lab/docflow
+git clone https://github.com/AURENYX-Lab/docflow
+cd docflow
+uv sync
+uv run pytest
+```
+
+### Fallback without uv (not tested yet)
+```bash
+git clone https://github.com/AURENYX-Lab/docflow
 cd docflow
 pip install -e .
+pip install pytest
 pytest
 ```
 
