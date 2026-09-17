@@ -14,8 +14,8 @@ dependencies = [
   "pyyaml>=6.0,<7",
   "requests>=2.32,<3",
   "pikepdf>=10.2,<11",
-  "lxml>=6.0,<7",
-  "pillow>=12.1,<13",
+  "lxml>=6.1.0,<7",
+  "pillow>=12.3.0,<13",
 ]
 
 [project.scripts]
@@ -26,6 +26,6 @@ packages = ["src/docflow"]
 
 [dependency-groups]
 dev = [
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
 ]
