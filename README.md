@@ -2,8 +2,8 @@
 ![Local-first](https://img.shields.io/badge/runtime-local--first-lightgrey)
 ![Deterministic](https://img.shields.io/badge/design-deterministic-critical)
   </a>
-  <a href="https://github.com/AURENYX-Lab/aurenyx-obsidian/releases">
-    <img src="https://img.shields.io/github/downloads/AURENYX-Lab/aurenyx-obsidian/total?style=for-the-badge&label=Downloads&color=4F8F8A&labelColor=1B2227" alt="Downloads">
+  <a href="https://github.com/AURENYX-Lab/docflow/releases">
+    <img src="https://img.shields.io/github/downloads/AURENYX-Lab/docflow/total?style=for-the-badge&label=Downloads&color=4F8F8A&labelColor=1B2227" alt="Downloads">
   </a>
 > ⚠ Early Development
 >
